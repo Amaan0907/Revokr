@@ -78,3 +78,20 @@ keeping it in `.env` long-term.
 
 **Verified:** sent a test message via console, confirmed delivery; confirmed a
 message received 5x without deletion lands in `revokr-jobs-dlq`.
+
+## Phase 0 — Demo repo and sandbox test credential references
+
+- **Sandbox test IAM user:** `test-user` (see "Sandbox IAM role" section above for
+  the ARN, identity policy, and permissions boundary — same user, not recreated).
+  Its access key is the credential used to simulate a "leaked secret" in the demo
+  repo; the key value itself is never recorded here or anywhere in the repo.
+- **Demo GitHub repo:** `<DEMO_REPO_NAME>` — not yet created. Will hold a test
+  commit containing the `test-user` access key (masked/detected, never a real
+  production credential) to trigger the detection → webhook flow for checkpoint 16.
+- **GitHub App installation:** pending — will be installed on the demo repo above
+  once it exists, via the App's install URL, hitting
+  `/github/install/callback` on the live ECS URL.
+
+**Known follow-up:** create the demo repo, install the GitHub App on it, then
+confirm checkpoint 16 (real push → webhook → signature verifies → 200) before
+updating this section with real values.
