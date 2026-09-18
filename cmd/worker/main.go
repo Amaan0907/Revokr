@@ -7,11 +7,17 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/joho/godotenv"
+
 	"github.com/Amaan0907/Revokr/internal/db"
 	"github.com/Amaan0907/Revokr/internal/queue"
 )
 
 func main() {
+	// .env only exists in local dev; ECS gets its env vars from the task
+	// definition, so a missing file here is expected and not an error.
+	_ = godotenv.Load()
+
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
