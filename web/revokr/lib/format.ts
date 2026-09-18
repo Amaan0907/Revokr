@@ -23,6 +23,18 @@ export function formatDateTime(iso: string): string {
   return `${DATE_TIME.format(new Date(iso))} UTC`;
 }
 
+const TIME = new Intl.DateTimeFormat("en-GB", {
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hour12: false,
+  timeZone: "UTC",
+});
+
+export function formatTime(iso: string): string {
+  return TIME.format(new Date(iso));
+}
+
 export function timeAgo(iso: string, now = Date.now()): string {
   const ms = now - new Date(iso).getTime();
   return ms < MINUTE ? "just now" : `${formatDuration(ms)} ago`;
