@@ -47,8 +47,7 @@ func main() {
 	})
 
 	githubapp.RegisterInstallCallback(r)
-
-	// TODO(checkpoint 14): webhook route, verifies signatures with githubApp.WebhookSecret
+	githubapp.RegisterWebhook(r, githubApp.WebhookSecret)
 
 	r.Run(":" + port)
 }
