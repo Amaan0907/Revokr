@@ -28,3 +28,53 @@
 scope the resource ARN as `arn:aws:iam::*:user/test-user` (account ID wildcarded).
 Needs tightening to the real sandbox account ID above before this is considered
 fully locked down.
+
+## Phase 0 — RDS PostgreSQL instance
+
+- **Instance identifier:** `revokr-db`
+- **Engine:** PostgreSQL 16.x
+- **Instance class:** `db.t4g.micro` (or `db.t3.micro`)
+- **Storage:** 20 GiB gp3, autoscaling disabled
+- **Multi-AZ:** No
+- **Endpoint:** `<RDS_ENDPOINT>`
+- **Port:** 5432
+- **Initial database:** `revokr`
+- **Master username:** `revokradmin`
+- **Credentials:** managed by RDS in AWS Secrets Manager (not a plaintext password
+  anywhere) — secret ARN: `<RDS_SECRET_ARN>`
+- **VPC / networking:** same VPC as the ECS cluster; security group `revokr-rds-sg`
+  allows inbound 5432 only from the ECS task's security group (plus a temporary
+  rule for local dev access, removed after initial setup)
+- **Deletion protection:** off (event teardown)
+- **Auto minor version upgrade:** off (avoid a forced restart mid-event)
+
+**Verified:** connected via `psql` using the Secrets Manager credentials, `sslmode=require`.
+
+**Known follow-up:** app currently reads DB connection details from `.env`
+(`DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`) — plan is to switch the
+password lookup to Secrets Manager at runtime once checkpoint 9 lands, rather than
+keeping it in `.env` long-term.
+
+## Phase 0 — SQS job queue and DLQ
+
+- **Dead-letter queue:** `revokr-jobs-dlq`
+  - URL: `<DLQ_QUEUE_URL>`
+  - ARN: `<DLQ_QUEUE_ARN>`
+  - Message retention: 14 days
+  - Redrive allow policy: restricted to `revokr-jobs` only
+
+- **Main queue:** `revokr-jobs`
+  - URL: `<MAIN_QUEUE_URL>`
+  - ARN: `<MAIN_QUEUE_ARN>`
+  - Visibility timeout: 120s
+  - Redrive policy: max receives = 5 → `revokr-jobs-dlq`
+
+- **IAM:** permissions for both queues live on `revokr-api-task-role` (the general
+  app task role), not `RemediationSandboxRole` — same separation as the RDS secret
+  access, so the narrowly-scoped remediation role never gains unrelated permissions.
+  - `sqs:SendMessage`, `sqs:GetQueueAttributes` on `revokr-jobs`
+  - `sqs:ReceiveMessage`, `sqs:DeleteMessage`, `sqs:ChangeMessageVisibility`,
+    `sqs:GetQueueAttributes` on `revokr-jobs`
+
+**Verified:** sent a test message via console, confirmed delivery; confirmed a
+message received 5x without deletion lands in `revokr-jobs-dlq`.
