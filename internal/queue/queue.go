@@ -4,6 +4,7 @@ package queue
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -31,6 +32,15 @@ func (c *Client) Send(ctx context.Context, body string) error {
 		MessageBody: aws.String(body),
 	})
 	return err
+}
+
+// SendJob serializes a job payload to JSON and sends it to the SQS queue.
+func (c *Client) SendJob(ctx context.Context, job any) error {
+	data, err := json.Marshal(job)
+	if err != nil {
+		return fmt.Errorf("marshal job: %w", err)
+	}
+	return c.Send(ctx, string(data))
 }
 
 // Receive long-polls for up to maxMessages jobs, waiting up to 20s for one to arrive.

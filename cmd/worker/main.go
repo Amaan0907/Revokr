@@ -2,15 +2,21 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 
 	"github.com/Amaan0907/Revokr/internal/db"
+	"github.com/Amaan0907/Revokr/internal/detector"
+	"github.com/Amaan0907/Revokr/internal/incidents"
 	"github.com/Amaan0907/Revokr/internal/queue"
+	"github.com/Amaan0907/Revokr/internal/risk"
 )
 
 func main() {
@@ -49,13 +55,87 @@ func main() {
 		}
 
 		for _, msg := range messages {
-			log.Printf("worker: received job: %s", *msg.Body)
-			// TODO: parse job, dispatch to the internal/provider adapter for
-			// the credential's provider type, update internal/actions status
-			// keyed by actions.IdempotencyKey before doing anything destructive.
+			if err := handleJob(ctx, pool, *msg.Body); err != nil {
+				log.Printf("worker: handle job error: %v", err)
+			}
+
 			if err := q.Delete(ctx, *msg.ReceiptHandle); err != nil {
 				log.Printf("worker: delete message error: %v", err)
 			}
 		}
 	}
+}
+
+func handleJob(ctx context.Context, pool *pgxpool.Pool, body string) error {
+	var job queue.DetectionJob
+	if err := json.Unmarshal([]byte(body), &job); err != nil {
+		log.Printf("worker: unmarshal job error (non-detection job): %v", err)
+		return nil
+	}
+
+	log.Printf("worker: processing detection job for %s/%s at commit %s",
+		job.RepositoryOwner, job.RepositoryName, job.CommitSHA)
+
+	if job.DiffContent == "" {
+		log.Printf("worker: no diff content provided for commit %s, skipping scan", job.CommitSHA)
+		return nil
+	}
+
+	findings := detector.ScanDiff(job.DiffContent)
+	if len(findings) == 0 {
+		log.Printf("worker: scan complete - 0 secrets detected in %s/%s",
+			job.RepositoryOwner, job.RepositoryName)
+		return nil
+	}
+
+	repoID, err := incidents.ResolveRepositoryID(ctx, pool, job.RepositoryID, job.RepositoryOwner, job.RepositoryName)
+	if err != nil {
+		log.Printf("worker: repository resolve note: %v", err)
+	}
+
+	filePath := job.FilePath
+	if filePath == "" {
+		filePath = "diff"
+	}
+
+	for _, f := range findings {
+		eval := risk.EvaluateRisk(risk.EvaluationInput{
+			Provider:        f.Provider,
+			SecretType:      f.SecretType,
+			IsPublicRepo:    job.IsPublic,
+			IsDefaultBranch: true,
+			CommitTime:      time.Now(),
+		})
+
+		if repoID != "" {
+			inc := &incidents.Incident{
+				RepositoryID: repoID,
+				CommitSHA:    job.CommitSHA,
+				FilePath:     filePath,
+				LineNumber:   f.LineNumber,
+				Provider:     f.Provider,
+				SecretType:   f.SecretType,
+				Fingerprint:  f.Fingerprint,
+				MaskedValue:  f.MaskedValue,
+				Severity:     eval.Severity,
+				RiskScore:    eval.Score,
+				RiskFactors:  eval.RiskFactors,
+				Status:       incidents.StatusDetected,
+				Simulated:    job.Simulated,
+			}
+
+			if err := incidents.Create(ctx, pool, inc); err != nil {
+				log.Printf("worker: failed to persist incident: %v", err)
+			} else {
+				log.Printf("worker: incident stored [id=%s provider=%s masked=%s severity=%s score=%d status=%s]",
+					inc.ID, inc.Provider, inc.MaskedValue, inc.Severity, inc.RiskScore, inc.Status)
+			}
+		} else {
+			// When running locally without populated repo tables, log safely with masked value
+			log.Printf("worker: secret detected [provider=%s masked=%s severity=%s score=%d]",
+				f.Provider, f.MaskedValue, eval.Severity, eval.Score)
+		}
+	}
+
+	return nil
 }
