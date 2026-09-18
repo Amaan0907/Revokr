@@ -9,7 +9,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 
+	"github.com/Amaan0907/Revokr/internal/db"
 	"github.com/Amaan0907/Revokr/internal/githubapp"
+	"github.com/Amaan0907/Revokr/internal/incidents"
 	"github.com/Amaan0907/Revokr/internal/queue"
 	"github.com/Amaan0907/Revokr/internal/secrets"
 )
@@ -26,6 +28,14 @@ func main() {
 	}
 
 	ctx := context.Background()
+
+	pool, err := db.Connect(ctx)
+	if err != nil {
+		log.Printf("api: db connect warning: %v (running with fallback)", err)
+	} else {
+		defer pool.Close()
+		log.Println("api: connected to postgres database")
+	}
 
 	secretsClient, err := secrets.New(ctx)
 	if err != nil {
@@ -59,6 +69,7 @@ func main() {
 
 	githubapp.RegisterInstallCallback(r)
 	githubapp.RegisterWebhook(r, githubApp.WebhookSecret, queueClient)
+	incidents.RegisterRoutes(r, pool)
 
 	r.Run(":" + port)
 }

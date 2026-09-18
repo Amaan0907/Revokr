@@ -73,6 +73,87 @@ func Create(ctx context.Context, pool *pgxpool.Pool, inc *Incident) error {
 	).Scan(&inc.ID, &inc.CreatedAt)
 }
 
+// List returns incidents ordered by created_at DESC with an optional limit.
+func List(ctx context.Context, pool *pgxpool.Pool, limit int) ([]Incident, error) {
+	if limit <= 0 || limit > 100 {
+		limit = 50
+	}
+
+	query := `
+		SELECT id, repository_id, commit_sha, file_path, line_number, provider,
+		       secret_type, fingerprint, masked_value, is_live, severity,
+		       risk_score, risk_factors, status, simulated, created_at, resolved_at
+		FROM incidents
+		ORDER BY created_at DESC
+		LIMIT $1;
+	`
+	rows, err := pool.Query(ctx, query, limit)
+	if err != nil {
+		return nil, fmt.Errorf("query incidents: %w", err)
+	}
+	defer rows.Close()
+
+	var results []Incident
+	for rows.Next() {
+		var inc Incident
+		var factorsRaw []byte
+		var statusStr string
+
+		if err := rows.Scan(
+			&inc.ID, &inc.RepositoryID, &inc.CommitSHA, &inc.FilePath, &inc.LineNumber,
+			&inc.Provider, &inc.SecretType, &inc.Fingerprint, &inc.MaskedValue, &inc.IsLive,
+			&inc.Severity, &inc.RiskScore, &factorsRaw, &statusStr, &inc.Simulated,
+			&inc.CreatedAt, &inc.ResolvedAt,
+		); err != nil {
+			return nil, fmt.Errorf("scan incident: %w", err)
+		}
+
+		inc.Status = Status(statusStr)
+		if len(factorsRaw) > 0 {
+			var f any
+			_ = json.Unmarshal(factorsRaw, &f)
+			inc.RiskFactors = f
+		}
+
+		results = append(results, inc)
+	}
+
+	return results, nil
+}
+
+// GetByID fetches a single incident by its UUID.
+func GetByID(ctx context.Context, pool *pgxpool.Pool, id string) (*Incident, error) {
+	query := `
+		SELECT id, repository_id, commit_sha, file_path, line_number, provider,
+		       secret_type, fingerprint, masked_value, is_live, severity,
+		       risk_score, risk_factors, status, simulated, created_at, resolved_at
+		FROM incidents
+		WHERE id = $1;
+	`
+
+	var inc Incident
+	var factorsRaw []byte
+	var statusStr string
+
+	if err := pool.QueryRow(ctx, query, id).Scan(
+		&inc.ID, &inc.RepositoryID, &inc.CommitSHA, &inc.FilePath, &inc.LineNumber,
+		&inc.Provider, &inc.SecretType, &inc.Fingerprint, &inc.MaskedValue, &inc.IsLive,
+		&inc.Severity, &inc.RiskScore, &factorsRaw, &statusStr, &inc.Simulated,
+		&inc.CreatedAt, &inc.ResolvedAt,
+	); err != nil {
+		return nil, fmt.Errorf("incident not found: %w", err)
+	}
+
+	inc.Status = Status(statusStr)
+	if len(factorsRaw) > 0 {
+		var f any
+		_ = json.Unmarshal(factorsRaw, &f)
+		inc.RiskFactors = f
+	}
+
+	return &inc, nil
+}
+
 // ResolveRepositoryID finds an existing repository UUID or returns an error.
 func ResolveRepositoryID(ctx context.Context, pool *pgxpool.Pool, explicitID, owner, name string) (string, error) {
 	if explicitID != "" {
