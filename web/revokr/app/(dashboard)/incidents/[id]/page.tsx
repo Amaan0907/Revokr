@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { ActivityTimeline } from "@/components/incident-detail/activity-timeline";
+import { AnalystPanel } from "@/components/incident-detail/analyst-panel";
 import { IncidentDetails } from "@/components/incident-detail/incident-details";
 import { IncidentHeader } from "@/components/incident-detail/incident-header";
 import { LiveIncidentProvider } from "@/components/incident-detail/incident-live";
@@ -50,6 +51,7 @@ export default async function IncidentPage({ params }: IncidentPageProps) {
             <ActivityTimeline />
           </div>
           <div className="flex flex-col gap-6">
+            <AnalystPanel analysis={detail.analysis} initialStatus={incident.status} />
             <RiskBreakdown incident={incident} />
             <IncidentDetails incident={incident} />
           </div>
