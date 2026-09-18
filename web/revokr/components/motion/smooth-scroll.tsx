@@ -2,8 +2,9 @@
 
 import { useEffect } from "react";
 
-// How much of the remaining distance the page covers each 60fps frame. Lower feels floatier.
-const LERP = 0.11;
+// How much of the remaining distance the page covers each 60fps frame. Lower feels floatier,
+// higher feels more direct. 0.14 stays smooth without feeling like the page lags your hand.
+const LERP = 0.14;
 const LINE_HEIGHT = 16;
 
 const easeInOutCubic = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);

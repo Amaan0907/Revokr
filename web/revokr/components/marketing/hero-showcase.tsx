@@ -34,12 +34,12 @@ export function HeroShowcase() {
     <div ref={ref} className="relative mx-auto mt-20 max-w-5xl px-4 sm:mt-24 sm:px-6">
       <div
         aria-hidden
-        className="glow-fill pointer-events-none absolute inset-x-8 top-16 bottom-4 -z-10 rounded-full opacity-35 blur-[90px]"
+        className="glow-soft pointer-events-none absolute -inset-x-10 top-10 -bottom-10 -z-10 opacity-45"
       />
-      <div className="animate-rise [animation-delay:700ms]">
+      <div className="animate-lift [animation-delay:700ms]">
         <motion.div
           style={{ rotateX, scale, transformPerspective: 1800, transformOrigin: "50% 0%" }}
-          className="glass-rim relative overflow-hidden rounded-[22px] bg-[#0b0b0c]/55 shadow-[inset_0_1px_0_rgb(255_255_255/0.1),0_50px_120px_-20px_rgb(0_0_0/0.9)] backdrop-blur-3xl backdrop-saturate-150"
+          className="glass-rim relative overflow-hidden rounded-[22px] bg-[#0b0b0c]/70 shadow-[inset_0_1px_0_rgb(255_255_255/0.1),0_50px_120px_-20px_rgb(0_0_0/0.9)]"
         >
           <div
             aria-hidden

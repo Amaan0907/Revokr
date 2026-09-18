@@ -132,7 +132,7 @@ export function ApproveVisual() {
     <VisualFrame glow="approval">
       <div className={cn("relative w-full max-w-sm", card.className)} style={card.style}>
         <div className="absolute inset-x-5 -bottom-2.5 h-full rounded-[22px] bg-white/[0.04] ring-1 ring-white/[0.06]" />
-        <div className="glass-rim relative rounded-[22px] bg-white/[0.09] p-4 text-left shadow-[inset_0_1px_0_rgb(255_255_255/0.12),0_20px_50px_-12px_rgb(0_0_0/0.8)] backdrop-blur-2xl backdrop-saturate-150">
+        <div className="glass-rim relative rounded-[22px] bg-[#232326]/90 p-4 text-left shadow-[inset_0_1px_0_rgb(255_255_255/0.12),0_20px_50px_-12px_rgb(0_0_0/0.8)]">
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <LogoMark className="size-5 rounded-[6px]" />
             <span className="font-semibold uppercase tracking-[0.06em]">Revokr</span>

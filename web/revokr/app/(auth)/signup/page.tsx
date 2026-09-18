@@ -35,7 +35,7 @@ export default async function SignupPage({ searchParams }: SignupPageProps) {
       switchLabel="Sign in"
     >
       <ol
-        className="mt-9 animate-rise divide-y divide-white/[0.06] overflow-hidden rounded-2xl bg-white/[0.04] ring-1 ring-inset ring-white/[0.07]"
+        className="mt-9 animate-lift divide-y divide-white/[0.06] overflow-hidden rounded-2xl bg-white/[0.04] ring-1 ring-inset ring-white/[0.07]"
         style={{ animationDelay: "320ms" }}
       >
         {STEPS.map((step, i) => (

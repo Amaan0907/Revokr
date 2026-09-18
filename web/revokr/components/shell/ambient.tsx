@@ -3,8 +3,8 @@ import { cn } from "@/lib/utils";
 const ORB = "absolute rounded-full";
 
 // Soft pools of coloured light fixed behind the page, like an Apple wallpaper under Liquid Glass.
-// Mostly black; just enough colour for the frosted panels above to pick up. Drifting is optional
-// because every glass panel re-blurs what's behind it on each frame.
+// Mostly black; just enough colour for the translucent panels above to pick up. Drifting is
+// opt-in and kept to pages with little else moving.
 export function Ambient({ animated = false, className }: { animated?: boolean; className?: string }) {
   return (
     <div aria-hidden className={cn("pointer-events-none fixed inset-0 -z-10 overflow-hidden", className)}>

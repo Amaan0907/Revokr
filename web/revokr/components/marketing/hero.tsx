@@ -47,7 +47,7 @@ export function Hero({ signedIn }: { signedIn: boolean }) {
         </h1>
 
         <p
-          className="animate-rise mx-auto mt-8 max-w-2xl text-[length:clamp(1.125rem,2.1vw,1.375rem)] font-medium leading-snug tracking-[-0.015em] text-muted-foreground text-balance"
+          className="animate-lift mx-auto mt-8 max-w-2xl text-[length:clamp(1.125rem,2.1vw,1.375rem)] font-medium leading-snug tracking-[-0.015em] text-muted-foreground text-balance"
           style={{ animationDelay: "480ms" }}
         >
           Revokr catches secrets the moment they&apos;re pushed to GitHub, proves they&apos;re live,
@@ -56,7 +56,7 @@ export function Hero({ signedIn }: { signedIn: boolean }) {
         </p>
 
         <div
-          className="animate-rise mt-10 flex flex-col items-center justify-center gap-5 sm:flex-row sm:gap-7"
+          className="animate-lift mt-10 flex flex-col items-center justify-center gap-5 sm:flex-row sm:gap-7"
           style={{ animationDelay: "600ms" }}
         >
           {signedIn ? (
@@ -82,7 +82,7 @@ export function Hero({ signedIn }: { signedIn: boolean }) {
         </div>
 
         <p
-          className="animate-rise mt-6 flex items-center justify-center gap-1.5 text-[13px] text-muted-foreground"
+          className="animate-lift mt-6 flex items-center justify-center gap-1.5 text-[13px] text-muted-foreground"
           style={{ animationDelay: "680ms" }}
         >
           <Lock aria-hidden className="size-3.5" />

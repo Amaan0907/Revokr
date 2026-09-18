@@ -50,7 +50,7 @@ export function Numbers() {
   return (
     <section
       aria-label="Revokr in numbers"
-      className="border-y border-white/[0.07] bg-white/[0.02] shadow-[inset_0_1px_0_rgb(255_255_255/0.04)] backdrop-blur-2xl"
+      className="border-y border-white/[0.07] bg-white/[0.025] shadow-[inset_0_1px_0_rgb(255_255_255/0.04)]"
     >
       <ul className="mx-auto grid max-w-6xl grid-cols-2 gap-x-6 gap-y-14 px-4 py-24 sm:px-6 lg:grid-cols-4">
         {FACTS.map((fact, i) => (
@@ -93,11 +93,11 @@ function Tile({
         <>
           <div
             aria-hidden
-            className="glow-fill pointer-events-none absolute -top-28 left-1/2 h-56 w-3/4 -translate-x-1/2 rounded-full opacity-20 blur-3xl"
+            className="glow-soft pointer-events-none absolute -top-32 left-1/2 h-64 w-full -translate-x-1/2 opacity-25"
           />
           <div
             aria-hidden
-            className="glow-fill glow-ring pointer-events-none absolute inset-0 rounded-[inherit] opacity-60"
+            className="glow-fill glow-ring animate-glow-spin pointer-events-none absolute inset-0 rounded-[inherit] opacity-60"
           />
         </>
       )}
@@ -392,7 +392,7 @@ export function FinalCta({ signedIn }: { signedIn: boolean }) {
     <section className="relative isolate overflow-hidden px-4 py-32 text-center sm:px-6 sm:py-44">
       <div
         aria-hidden
-        className="glow-fill pointer-events-none absolute left-1/2 top-1/2 -z-10 h-72 w-[min(56rem,90vw)] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-20 blur-[110px]"
+        className="glow-soft pointer-events-none absolute left-1/2 top-1/2 -z-10 h-[28rem] w-[min(64rem,100vw)] -translate-x-1/2 -translate-y-1/2 opacity-30"
       />
       <Reveal>
         <h2 className="mx-auto max-w-4xl text-[length:clamp(2.5rem,7vw,5.25rem)] font-semibold leading-[1.02] tracking-[-0.05em] text-balance">

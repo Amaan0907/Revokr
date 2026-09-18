@@ -140,16 +140,10 @@ export function Story() {
               <motion.div
                 key={STEPS[active].kind}
                 className="h-full"
-                initial={{ opacity: 0, y: 24, scale: 0.97, filter: "blur(8px)" }}
-                animate={{
-                  opacity: 1,
-                  y: 0,
-                  scale: 1,
-                  filter: "blur(0px)",
-                  transitionEnd: { filter: "none" },
-                }}
-                exit={{ opacity: 0, y: -24, scale: 0.97, filter: "blur(8px)" }}
-                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                initial={{ opacity: 0, y: 24, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -24, scale: 0.97 }}
+                transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
               >
                 <Visual kind={STEPS[active].kind} instance="pinned" />
               </motion.div>

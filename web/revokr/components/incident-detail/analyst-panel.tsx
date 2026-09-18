@@ -43,9 +43,10 @@ export function AnalystPanel({ analysis, initialStatus }: AnalystPanelProps) {
   return (
     <section aria-labelledby="analyst-heading" className="relative">
       {bedrock && (
+        // A spectrum halo from coloured shadows: drawn once, unlike an animated blurred glow.
         <div
           aria-hidden
-          className="glow-fill pointer-events-none absolute -inset-1 rounded-[28px] opacity-25 blur-xl"
+          className="pointer-events-none absolute inset-0 rounded-3xl shadow-[-14px_-10px_40px_-14px_rgb(255_159_10/0.45),14px_10px_40px_-14px_rgb(41_151_255/0.5),0_0_48px_-16px_rgb(191_90_242/0.6)]"
         />
       )}
       <div className="surface relative overflow-hidden rounded-3xl p-6">
@@ -132,7 +133,7 @@ export function AnalystPanel({ analysis, initialStatus }: AnalystPanelProps) {
       {bedrock && (
         <div
           aria-hidden
-          className="glow-fill glow-ring pointer-events-none absolute inset-0 rounded-3xl opacity-70"
+          className="glow-fill glow-ring animate-glow-spin pointer-events-none absolute inset-0 rounded-3xl opacity-70"
         />
       )}
     </section>

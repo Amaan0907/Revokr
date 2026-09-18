@@ -28,7 +28,7 @@ const WIDE = "h-12 w-full text-[15px]";
 
 // Google's dark-theme button colours: near-black fill, grey outline, light grey text.
 const GOOGLE =
-  "border-[#8e918f]/60 bg-[#131314] text-[#e3e3e3] backdrop-blur-none hover:bg-[#1e1f20]";
+  "border-[#8e918f]/60 bg-[#131314] text-[#e3e3e3] hover:bg-[#1e1f20]";
 
 // A link that starts the provider's sign-in, or a disabled button when it isn't configured.
 function ProviderButton({
@@ -74,7 +74,10 @@ export function AuthForm({
     <div>
       <div className="flex flex-col items-center text-center">
         <div className="relative animate-rise">
-          <div aria-hidden className="glow-fill absolute inset-0 rounded-[22px] opacity-40 blur-2xl" />
+          <div
+            aria-hidden
+            className="absolute inset-0 rounded-[18px] shadow-[-12px_-4px_36px_-6px_rgb(255_159_10/0.4),12px_4px_36px_-6px_rgb(41_151_255/0.45),0_0_44px_-4px_rgb(191_90_242/0.5)]"
+          />
           <LogoMark className="relative size-16 rounded-[18px]" />
         </div>
         <h1
@@ -101,7 +104,7 @@ export function AuthForm({
         </p>
       )}
 
-      <div className="mt-9 flex animate-rise flex-col gap-3" style={{ animationDelay: "240ms" }}>
+      <div className="mt-9 flex animate-lift flex-col gap-3" style={{ animationDelay: "240ms" }}>
         <ProviderButton
           enabled={githubEnabled}
           href={`/api/auth/github?next=${nextParam}`}
