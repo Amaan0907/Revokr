@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Hourglass, ShieldAlert, ShieldCheck, Timer } from "lucide-react";
+import { ChevronRight, Hourglass, ShieldAlert, ShieldCheck, Timer } from "lucide-react";
 import { ActivityFeed, type ActivityItem } from "@/components/overview/activity-feed";
 import { AttentionList } from "@/components/overview/attention-list";
+import { FocusBanner } from "@/components/overview/focus-banner";
 import { RemediationPipeline } from "@/components/overview/remediation-pipeline";
 import { SeverityBreakdown } from "@/components/overview/severity-breakdown";
 import { StatCard } from "@/components/overview/stat-card";
@@ -10,17 +11,19 @@ import { buttonVariants } from "@/components/ui/button";
 import { formatDuration } from "@/lib/format";
 import { STATUS_META } from "@/lib/incident-meta";
 import { mockAuditLog, mockIncidents } from "@/lib/mock-data";
-import { cn } from "@/lib/utils";
+import { getSession } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Overview" };
 
-export default function OverviewPage() {
+export default async function OverviewPage() {
+  const session = await getSession();
   const incidents = mockIncidents;
   const organization = incidents[0]?.repositoryOwner ?? "your organization";
+  const firstName = (session?.user.name ?? session?.user.login ?? "").split(" ")[0];
 
   const open = incidents.filter((i) => !["resolved", "closed"].includes(STATUS_META[i.status].group));
   const criticalOpen = open.filter((i) => i.severity === "CRITICAL").length;
-  const awaitingApproval = incidents.filter((i) => i.status === "AWAITING_APPROVAL").length;
+  const awaiting = incidents.filter((i) => i.status === "AWAITING_APPROVAL");
   const needsAttention = incidents.filter((i) =>
     ["attention", "failed"].includes(STATUS_META[i.status].group),
   );
@@ -36,7 +39,7 @@ export default function OverviewPage() {
   const incidentById = new Map(incidents.map((i) => [i.id, i]));
   const recentActivity: ActivityItem[] = [...mockAuditLog]
     .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
-    .slice(0, 8)
+    .slice(0, 7)
     .flatMap((entry) => {
       const incident = incidentById.get(entry.incidentId);
       return incident ? [{ entry, incident }] : [];
@@ -46,58 +49,65 @@ export default function OverviewPage() {
     <div className="flex flex-col gap-8">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-balance">Security overview</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="text-[15px] font-medium text-muted-foreground">
+            Welcome back{firstName && `, ${firstName}`}
+          </p>
+          <h1 className="mt-1 text-[34px] font-bold leading-tight tracking-[-0.035em]">Overview</h1>
+          <p className="mt-1 max-w-xl text-[15px] text-muted-foreground">
             Leaked secrets across {organization}&apos;s repositories, and where each one is in
             remediation.
           </p>
         </div>
-        <Link
-          href="/incidents"
-          className={cn(buttonVariants({ variant: "outline", size: "sm" }), "w-fit rounded-md")}
-        >
+        <Link href="/incidents" className={buttonVariants({ variant: "secondary", size: "sm" })}>
           All incidents
-          <ArrowRight aria-hidden data-icon="inline-end" />
+          <ChevronRight aria-hidden data-icon="inline-end" />
         </Link>
       </header>
 
-      <dl className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <FocusBanner awaiting={awaiting} />
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           index={0}
-          label="Open incidents"
-          value={String(open.length)}
+          tone="critical"
           icon={ShieldAlert}
-          detail={
-            criticalOpen > 0 ? (
-              <span className="text-critical">{criticalOpen} critical</span>
-            ) : (
-              "None critical"
-            )
-          }
+          label="Open incidents"
+          value={open.length}
+          unit="open"
+          href="/incidents"
+          detail={criticalOpen > 0 ? `${criticalOpen} critical right now` : "None critical"}
         />
         <StatCard
           index={1}
-          label="Awaiting approval"
-          value={String(awaitingApproval)}
+          tone="approval"
           icon={Hourglass}
-          highlight={awaitingApproval > 0}
-          detail={awaitingApproval > 0 ? "Rotation is ready to run" : "Nothing waiting on you"}
+          label="Awaiting approval"
+          value={awaiting.length}
+          unit="waiting"
+          href="/incidents?view=attention"
+          pulse={awaiting.length > 0}
+          detail={awaiting.length > 0 ? "A rotation is ready to run" : "Nothing waiting on you"}
         />
         <StatCard
           index={2}
-          label="Mean time to remediate"
-          value={meanTimeToRemediate === null ? "—" : formatDuration(meanTimeToRemediate)}
+          tone="progress"
           icon={Timer}
-          detail="From detection to verified rotation"
+          label="Time to remediate"
+          value={meanTimeToRemediate === null ? "—" : formatDuration(meanTimeToRemediate)}
+          href="/incidents?view=resolved"
+          detail="Average, detection to verified rotation"
         />
         <StatCard
           index={3}
-          label="Credentials rotated"
-          value={String(resolved.length)}
+          tone="resolved"
           icon={ShieldCheck}
+          label="Credentials rotated"
+          value={resolved.length}
+          unit="rotated"
+          href="/incidents?view=resolved"
           detail="Leaked keys confirmed dead"
         />
-      </dl>
+      </div>
 
       <RemediationPipeline incidents={incidents} />
 

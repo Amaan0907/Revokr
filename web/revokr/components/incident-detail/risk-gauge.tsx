@@ -3,36 +3,75 @@ import { SEVERITY_META } from "@/lib/incident-meta";
 import type { Severity } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-const RADIUS = 34;
-const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+const SIZES = {
+  sm: { box: "size-20", stroke: 10, score: "text-xl" },
+  md: { box: "size-28", stroke: 10, score: "text-[28px]" },
+} as const;
 
-export function RiskGauge({ score, severity }: { score: number; severity: Severity }) {
-  const offset = CIRCUMFERENCE * (1 - Math.min(Math.max(score, 0), 100) / 100);
+interface RiskGaugeProps {
+  score: number;
+  severity: Severity;
+  size?: keyof typeof SIZES;
+  // Must be unique on the page when two gauges of the same severity could render, one of them hidden.
+  gradientId?: string;
+}
+
+// An Activity-style ring: a dim track in the severity colour with a glowing gradient arc on top.
+export function RiskGauge({ score, severity, size = "md", gradientId }: RiskGaugeProps) {
+  const meta = SEVERITY_META[severity];
+  const { box, stroke, score: scoreClass } = SIZES[size];
+  const radius = 50 - stroke / 2 - 2;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference * (1 - Math.min(Math.max(score, 0), 100) / 100);
+  const id = gradientId ?? `risk-ring-${severity.toLowerCase()}-${size}`;
 
   return (
     <div
       role="img"
       aria-label={`Risk score ${score} out of 100`}
-      className="relative grid size-24 shrink-0 place-items-center"
+      className={cn("relative grid shrink-0 place-items-center", box, meta.text)}
     >
-      <svg aria-hidden viewBox="0 0 80 80" className="absolute inset-0 -rotate-90">
-        <circle cx="40" cy="40" r={RADIUS} fill="none" strokeWidth="6" className="stroke-muted" />
+      <svg aria-hidden viewBox="0 0 100 100" className="absolute inset-0 -rotate-90">
+        <defs>
+          <linearGradient id={id} x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor={meta.ring[0]} />
+            <stop offset="100%" stopColor={meta.ring[1]} />
+          </linearGradient>
+        </defs>
         <circle
-          cx="40"
-          cy="40"
-          r={RADIUS}
+          cx="50"
+          cy="50"
+          r={radius}
           fill="none"
-          strokeWidth="6"
+          strokeWidth={stroke}
+          className="stroke-current opacity-20"
+        />
+        <circle
+          cx="50"
+          cy="50"
+          r={radius}
+          fill="none"
+          stroke={`url(#${id})`}
+          strokeWidth={stroke}
           strokeLinecap="round"
-          strokeDasharray={CIRCUMFERENCE}
+          strokeDasharray={circumference}
           strokeDashoffset={offset}
-          className={cn("animate-draw stroke-current", SEVERITY_META[severity].text)}
-          style={{ "--gauge-length": String(CIRCUMFERENCE) } as CSSProperties}
+          className="animate-draw"
+          style={
+            {
+              "--gauge-length": String(circumference),
+              filter: "drop-shadow(0 0 5px color-mix(in srgb, currentColor 50%, transparent))",
+            } as CSSProperties
+          }
         />
       </svg>
       <div aria-hidden className="text-center">
-        <p className="text-2xl font-semibold leading-none tabular-nums">{score}</p>
-        <p className="mt-1 text-[10px] uppercase tracking-wider text-muted-foreground">Risk</p>
+        <p className={cn("font-semibold leading-none tracking-tight tabular-nums text-foreground", scoreClass)}>
+          {score}
+        </p>
+        <p className="mt-1 text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+          Risk
+        </p>
       </div>
     </div>
   );

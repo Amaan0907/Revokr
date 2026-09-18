@@ -1,3 +1,4 @@
+import { WipeIn } from "@/components/motion/wipe-in";
 import { SEVERITY_META } from "@/lib/incident-meta";
 import type { Incident } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -10,30 +11,35 @@ export function RiskBreakdown({ incident }: { incident: Incident }) {
   const factors = [...incident.riskFactors].sort((a, b) => b.points - a.points);
 
   return (
-    <section aria-labelledby="risk-heading" className="rounded-xl border bg-card p-5">
-      <h2 id="risk-heading" className="text-sm font-semibold">
-        Why it scored {incident.riskScore}
+    <section
+      aria-labelledby="risk-heading"
+      className="surface rounded-3xl p-6 animate-in fade-in slide-in-from-bottom-3 animation-duration-700 fill-mode-both [animation-delay:220ms]"
+    >
+      <h2 id="risk-heading" className="text-[17px] font-semibold tracking-[-0.015em]">
+        Why it scored <span className={cn("tabular-nums", tone)}>{incident.riskScore}</span>
       </h2>
-      <p className="mt-0.5 text-xs text-muted-foreground">
+      <p className="mt-0.5 text-[13px] text-muted-foreground">
         The risk score is the sum of these factors, out of 100.
       </p>
 
-      <div aria-hidden className={cn("mt-4 flex h-2 gap-0.5 overflow-hidden rounded-full bg-muted", tone)}>
-        {factors.map((factor, i) => (
-          <span
-            key={factor.factor}
-            className={cn("h-full origin-left animate-grow-x bg-current", SHADES[i % SHADES.length])}
-            style={{ width: `${factor.points}%`, animationDelay: `${200 + i * 90}ms` }}
-          />
-        ))}
+      <div aria-hidden className="mt-5 h-2.5 rounded-full bg-white/[0.06]">
+        <WipeIn className={cn("flex h-full gap-[3px]", tone)} delay={0.2}>
+          {factors.map((factor, i) => (
+            <span
+              key={factor.factor}
+              className={cn("h-full rounded-full bg-current", SHADES[i % SHADES.length])}
+              style={{ width: `${factor.points}%` }}
+            />
+          ))}
+        </WipeIn>
       </div>
 
-      <ul className="mt-4 flex flex-col gap-3">
+      <ul className="mt-5 flex flex-col divide-y divide-white/[0.06]">
         {factors.map((factor, i) => (
-          <li key={factor.factor} className="flex items-start gap-3">
+          <li key={factor.factor} className="flex items-start gap-3 py-2.5 first:pt-0 last:pb-0">
             <span
               aria-hidden
-              className={cn("mt-1.5 size-2 shrink-0 rounded-sm bg-current", tone, SHADES[i % SHADES.length])}
+              className={cn("mt-1.5 size-2 shrink-0 rounded-full bg-current", tone, SHADES[i % SHADES.length])}
             />
             <div className="min-w-0 flex-1">
               <p className="text-sm">{factor.factor}</p>
@@ -41,7 +47,7 @@ export function RiskBreakdown({ incident }: { incident: Incident }) {
                 <p className="mt-0.5 text-xs break-words text-muted-foreground">{factor.detail}</p>
               )}
             </div>
-            <span className="text-sm font-medium tabular-nums">+{factor.points}</span>
+            <span className={cn("text-sm font-semibold tabular-nums", tone)}>+{factor.points}</span>
           </li>
         ))}
       </ul>

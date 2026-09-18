@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { ActivityTimeline } from "@/components/incident-detail/activity-timeline";
 import { AnalystPanel } from "@/components/incident-detail/analyst-panel";
 import { IncidentDetails } from "@/components/incident-detail/incident-details";
@@ -37,9 +37,9 @@ export default async function IncidentPage({ params }: IncidentPageProps) {
       <div className="flex flex-col gap-6">
         <Link
           href="/incidents"
-          className="inline-flex w-fit items-center gap-1.5 rounded-sm text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+          className="-ml-1 inline-flex w-fit items-center gap-0.5 rounded-sm text-[15px] text-link transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-ring"
         >
-          <ArrowLeft aria-hidden className="size-4" />
+          <ChevronLeft aria-hidden className="size-5" />
           Incidents
         </Link>
 

@@ -1,45 +1,56 @@
 import { SeverityBars } from "@/components/incidents/badges";
+import { WipeIn } from "@/components/motion/wipe-in";
 import { SEVERITY_META, SEVERITY_ORDER } from "@/lib/incident-meta";
 import type { Incident } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
+// One segmented bar, like the storage bar in iPhone Settings, with a legend underneath.
 export function SeverityBreakdown({ incidents }: { incidents: Incident[] }) {
   const total = incidents.length;
+  const rows = SEVERITY_ORDER.map((severity) => ({
+    severity,
+    meta: SEVERITY_META[severity],
+    count: incidents.filter((incident) => incident.severity === severity).length,
+  }));
 
   return (
-    <section aria-labelledby="severity-heading" className="rounded-xl border bg-card p-5">
-      <h2 id="severity-heading" className="text-sm font-semibold">
-        Open by severity
-      </h2>
-      <p className="mt-0.5 text-xs text-muted-foreground">
-        {total} open {total === 1 ? "incident" : "incidents"}
-      </p>
+    <section
+      aria-labelledby="severity-heading"
+      className="surface rounded-3xl p-6 animate-in fade-in slide-in-from-bottom-3 animation-duration-700 fill-mode-both [animation-delay:320ms]"
+    >
+      <div className="flex items-baseline justify-between gap-4">
+        <h2 id="severity-heading" className="text-[17px] font-semibold tracking-[-0.015em]">
+          Open by severity
+        </h2>
+        <span className="text-[13px] tabular-nums text-muted-foreground">
+          {total} open
+        </span>
+      </div>
 
-      <ul className="mt-5 flex flex-col gap-4">
-        {SEVERITY_ORDER.map((severity, i) => {
-          const meta = SEVERITY_META[severity];
-          const count = incidents.filter((incident) => incident.severity === severity).length;
-          return (
-            <li key={severity} className="flex flex-col gap-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="flex items-center gap-2 font-medium">
-                  <SeverityBars level={meta.level} className={meta.text} />
-                  {meta.label}
-                </span>
-                <span className="tabular-nums text-muted-foreground">{count}</span>
-              </div>
-              <div aria-hidden className="h-1.5 overflow-hidden rounded-full bg-muted">
-                <div
-                  className={cn("h-full origin-left animate-grow-x", meta.fill)}
-                  style={{
-                    transform: `scaleX(${total ? count / total : 0})`,
-                    animationDelay: `${300 + i * 80}ms`,
-                  }}
+      <div aria-hidden className="mt-5 h-3 rounded-full bg-white/[0.06]">
+        {total > 0 && (
+          <WipeIn className="flex h-full gap-[3px]" delay={0.3}>
+            {rows
+              .filter((row) => row.count > 0)
+              .map((row) => (
+                <span
+                  key={row.severity}
+                  className={cn("h-full basis-0 rounded-full", row.meta.fill)}
+                  style={{ flexGrow: row.count }}
                 />
-              </div>
-            </li>
-          );
-        })}
+              ))}
+          </WipeIn>
+        )}
+      </div>
+
+      <ul className="mt-5 grid grid-cols-2 gap-x-6 gap-y-3.5">
+        {rows.map(({ severity, meta, count }) => (
+          <li key={severity} className="flex items-center gap-2.5 text-sm">
+            <SeverityBars level={meta.level} className={meta.text} />
+            <span className="font-medium">{meta.label}</span>
+            <span className="ml-auto tabular-nums text-muted-foreground">{count}</span>
+          </li>
+        ))}
       </ul>
     </section>
   );

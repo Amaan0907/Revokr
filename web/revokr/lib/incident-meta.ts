@@ -80,20 +80,24 @@ interface Tone {
   border: string;
 }
 
-const PROGRESS: Tone = { text: "text-progress", bg: "bg-progress/10", border: "border-progress/25" };
-const APPROVAL: Tone = { text: "text-approval", bg: "bg-approval/10", border: "border-approval/25" };
-const RESOLVED: Tone = { text: "text-resolved", bg: "bg-resolved/10", border: "border-resolved/25" };
-const FAILED: Tone = { text: "text-failed", bg: "bg-failed/10", border: "border-failed/25" };
-const ATTENTION: Tone = { text: "text-attention", bg: "bg-attention/10", border: "border-attention/25" };
-const UNSUPPORTED: Tone = { text: "text-unsupported", bg: "bg-unsupported/10", border: "border-unsupported/25" };
+const PROGRESS: Tone = { text: "text-progress", bg: "bg-progress/15", border: "border-progress/30" };
+const APPROVAL: Tone = { text: "text-approval", bg: "bg-approval/15", border: "border-approval/30" };
+const RESOLVED: Tone = { text: "text-resolved", bg: "bg-resolved/15", border: "border-resolved/30" };
+const FAILED: Tone = { text: "text-failed", bg: "bg-failed/15", border: "border-failed/30" };
+const ATTENTION: Tone = { text: "text-attention", bg: "bg-attention/15", border: "border-attention/30" };
+const UNSUPPORTED: Tone = { text: "text-unsupported", bg: "bg-unsupported/15", border: "border-unsupported/30" };
 
 export const SEVERITY_ORDER: Severity[] = ["CRITICAL", "HIGH", "MEDIUM", "LOW"];
 
-export const SEVERITY_META: Record<Severity, Tone & { label: string; level: number; fill: string }> = {
-  CRITICAL: { label: "Critical", level: 4, text: "text-critical", bg: "bg-critical/10", border: "border-critical/25", fill: "bg-critical" },
-  HIGH: { label: "High", level: 3, text: "text-high", bg: "bg-high/10", border: "border-high/25", fill: "bg-high" },
-  MEDIUM: { label: "Medium", level: 2, text: "text-medium", bg: "bg-medium/10", border: "border-medium/25", fill: "bg-medium" },
-  LOW: { label: "Low", level: 1, text: "text-low", bg: "bg-low/10", border: "border-low/25", fill: "bg-low" },
+// ring: the two ends of the Activity-ring gradient on the risk gauge (SVG stops need literal colours).
+export const SEVERITY_META: Record<
+  Severity,
+  Tone & { label: string; level: number; fill: string; ring: [string, string] }
+> = {
+  CRITICAL: { label: "Critical", level: 4, text: "text-critical", bg: "bg-critical/15", border: "border-critical/30", fill: "bg-critical", ring: ["#ff2d55", "#ff6b3d"] },
+  HIGH: { label: "High", level: 3, text: "text-high", bg: "bg-high/15", border: "border-high/30", fill: "bg-high", ring: ["#ff7a00", "#ffc233"] },
+  MEDIUM: { label: "Medium", level: 2, text: "text-medium", bg: "bg-medium/15", border: "border-medium/30", fill: "bg-medium", ring: ["#ffb800", "#fff04d"] },
+  LOW: { label: "Low", level: 1, text: "text-low", bg: "bg-low/15", border: "border-low/30", fill: "bg-low", ring: ["#0a84ff", "#64d2ff"] },
 };
 
 export const MOTION_CLASS = {
