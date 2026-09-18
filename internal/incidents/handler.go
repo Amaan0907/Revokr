@@ -128,7 +128,7 @@ func handleTransitionIncident(pool *pgxpool.Pool) gin.HandlerFunc {
 				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 				return
 			}
-			c.JSON(http.StatusOK, gin.H{"status": "ok", "new_status": StatusVerifying})
+			c.JSON(http.StatusOK, gin.H{"status": "ok", "new_status": StatusResolved})
 			return
 		}
 

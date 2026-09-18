@@ -35,3 +35,13 @@ func Rotate(ctx context.Context, isSimulated bool, cred CredentialInput) (provid
 	adapter := Select(isSimulated)
 	return adapter.Rotate(ctx, cred.toCredential())
 }
+
+// Revoke calls the adapter selected for isSimulated to disable the old
+// credential — the "disable old" step of the ordering rule in CLAUDE.md
+// (create replacement -> validate -> update destination -> verify ->
+// disable old -> verify). Like Rotate, it never touches a database or an
+// incident's status.
+func Revoke(ctx context.Context, isSimulated bool, cred CredentialInput) (provider.RevokeResult, error) {
+	adapter := Select(isSimulated)
+	return adapter.Revoke(ctx, cred.toCredential())
+}
