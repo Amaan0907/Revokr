@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Hourglass, ShieldAlert, ShieldCheck, Timer } from "lucide-react";
 import { AttentionList } from "@/components/overview/attention-list";
+import { RemediationPipeline } from "@/components/overview/remediation-pipeline";
+import { SeverityBreakdown } from "@/components/overview/severity-breakdown";
 import { StatCard } from "@/components/overview/stat-card";
 import { buttonVariants } from "@/components/ui/button";
 import { formatDuration } from "@/lib/format";
@@ -87,7 +89,14 @@ export default function OverviewPage() {
         />
       </dl>
 
-      <AttentionList incidents={needsAttention} />
+      <RemediationPipeline incidents={incidents} />
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <AttentionList incidents={needsAttention} />
+        </div>
+        <SeverityBreakdown incidents={open} />
+      </div>
     </div>
   );
 }

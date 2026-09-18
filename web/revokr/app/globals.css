@@ -67,6 +67,27 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+@theme {
+  --animate-grow-x: grow-x 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-flow: flow 3.5s linear infinite;
+
+  /* Grows a bar from zero to whatever scaleX it's given inline. */
+  @keyframes grow-x {
+    from {
+      transform: scaleX(0);
+    }
+  }
+
+  @keyframes flow {
+    from {
+      background-position: -50% 0;
+    }
+    to {
+      background-position: 150% 0;
+    }
+  }
+}
+
 /* Revokr is dark-only: one look, done well. */
 :root {
   color-scheme: dark;
