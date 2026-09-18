@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 
+	"github.com/Amaan0907/Revokr/internal/githubapp"
 	"github.com/Amaan0907/Revokr/internal/secrets"
 )
 
@@ -45,7 +46,8 @@ func main() {
 		})
 	})
 
-	// TODO(checkpoint 13): install callback route, uses githubApp.PrivateKeyPEM
+	githubapp.RegisterInstallCallback(r)
+
 	// TODO(checkpoint 14): webhook route, verifies signatures with githubApp.WebhookSecret
 
 	r.Run(":" + port)
