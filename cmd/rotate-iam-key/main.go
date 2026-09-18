@@ -5,13 +5,14 @@ import (
 	"flag"
 	"log"
 	"os"
+	"time"
 
 	awsiam "github.com/Amaan0907/Revokr/internal/providers/aws"
 )
 
 func main() {
 	targetUser := flag.String("target-user", "", "IAM username whose key is being rotated (required)")
-	oldKeyID := flag.String("old-key-id", "", "access key id to disable (required for diable-verify)")
+	oldKeyID := flag.String("old-key-id", "", "access key id to disable (required for disable-verify)")
 	step := flag.String("step", "create-validate", "create-validate | disable-verify")
 	flag.Parse()
 
@@ -31,12 +32,22 @@ func main() {
 		if err != nil {
 			log.Fatalf("create failed: %v", err)
 		}
-		log.Printf("created new key: %s:", newKey.AccessKeyID)
+		log.Printf("created new key: %s", newKey.AccessKeyID)
 
-		if err := awsiam.ValidateKey(ctx, client.Region(), newKey.AccessKeyID, newKey.SecretAccessKey); err != nil {
-			log.Fatalf("validate failed: %v", err)
+		var validateErr error
+		for attempt := 1; attempt <= 5; attempt++ {
+			validateErr = awsiam.ValidateKey(ctx, client.Region(), newKey.AccessKeyID, newKey.SecretAccessKey)
+			if validateErr == nil {
+				break
+			}
+			log.Printf("validate attempt %d failed (AWS key propagation delay is normal), retrying in 5s: %v", attempt, validateErr)
+			time.Sleep(5 * time.Second)
 		}
-		log.Println("SUCCESS: new key created and validated. Old key NOT Touched")
+		if validateErr != nil {
+			log.Fatalf("validate failed after retries: %v", validateErr)
+		}
+
+		log.Println("SUCCESS: new key created and validated. Old key NOT touched.")
 		log.Printf("new AccessKeyId=%s (save for the disable-verify step)", newKey.AccessKeyID)
 
 	case "disable-verify":
@@ -47,10 +58,6 @@ func main() {
 			log.Fatalf("deactivate failed: %v", err)
 		}
 		log.Println("old key deactivated")
-
-		//Rehearsal only: the old secret is passed via env var so it never
-		//lands in shell history or logs. Real remediation flow (phase 8)
-		//never needs the operator to hold a raw secret like this at all.
 
 		oldSecret := os.Getenv("OLD_SECRET_ACCESS_KEY")
 		if oldSecret == "" {
@@ -63,7 +70,6 @@ func main() {
 		log.Println("SUCCESS: old key confirmed dead")
 
 	default:
-		log.Fatalf("unkown -step %q", *step)
-
+		log.Fatalf("unknown -step %q", *step)
 	}
 }

@@ -3,6 +3,7 @@ package awsiam
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -91,12 +92,17 @@ func (c *Client) DeactivateOldKey(ctx context.Context, targetUsername, oldAccess
 }
 
 // VerifyKeyIsDead closes the loop: the same GetCallerIdentity call should
-// now fail for the disabled key.
+// now fail for the disabled key. IAM is eventually consistent, so a
+// just-disabled key can keep working for a few seconds - retry until AWS
+// actually rejects it.
 func VerifyKeyIsDead(ctx context.Context, region, accessKeyID, secretAccessKey string) error {
-	if err := ValidateKey(ctx, region, accessKeyID, secretAccessKey); err == nil {
-		return fmt.Errorf("old key %s still works - it should have been rejected", accessKeyID)
-	} else {
-		fmt.Printf("confirmed old key is dead: %v\n", err)
+	for attempt := 1; attempt <= 5; attempt++ {
+		if err := ValidateKey(ctx, region, accessKeyID, secretAccessKey); err != nil {
+			fmt.Printf("confirmed old key is dead: %v\n", err)
+			return nil
+		}
+		fmt.Printf("verify attempt %d: old key still works (deactivation propagation delay is normal), retrying in 5s\n", attempt)
+		time.Sleep(5 * time.Second)
 	}
-	return nil
+	return fmt.Errorf("old key %s still works after retries - it should have been rejected", accessKeyID)
 }
