@@ -1,0 +1,1 @@
+DROP TRABLE IF EXISTS users;
