@@ -4,21 +4,83 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
+
+	"github.com/Amaan0907/Revokr/internal/queue"
 )
+
+type pushPayload struct {
+	Ref        string `json:"ref"`
+	After      string `json:"after"`
+	Repository struct {
+		ID       int64  `json:"id"`
+		Name     string `json:"name"`
+		FullName string `json:"full_name"`
+		Owner    struct {
+			Login string `json:"login"`
+			Name  string `json:"name"`
+		} `json:"owner"`
+		Private bool `json:"private"`
+	} `json:"repository"`
+	HeadCommit struct {
+		ID string `json:"id"`
+	} `json:"head_commit"`
+	DiffContent string `json:"diff_content,omitempty"`
+	Simulated   bool   `json:"simulated,omitempty"`
+}
+
+// ParsePushEvent extracts repository and commit metadata into a queue.DetectionJob.
+func ParsePushEvent(body []byte) (*queue.DetectionJob, error) {
+	var payload pushPayload
+	if err := json.Unmarshal(body, &payload); err != nil {
+		return nil, fmt.Errorf("unmarshal push payload: %w", err)
+	}
+
+	commitSHA := payload.After
+	if commitSHA == "" || commitSHA == "0000000000000000000000000000000000000000" {
+		commitSHA = payload.HeadCommit.ID
+	}
+
+	owner := payload.Repository.Owner.Login
+	if owner == "" {
+		owner = payload.Repository.Owner.Name
+	}
+	if owner == "" && strings.Contains(payload.Repository.FullName, "/") {
+		parts := strings.SplitN(payload.Repository.FullName, "/", 2)
+		owner = parts[0]
+	}
+
+	job := &queue.DetectionJob{
+		RepositoryOwner: owner,
+		RepositoryName:  payload.Repository.Name,
+		CommitSHA:       commitSHA,
+		DiffContent:     payload.DiffContent,
+		IsPublic:        !payload.Repository.Private,
+		Simulated:       payload.Simulated,
+	}
+
+	return job, nil
+}
 
 // RegisterWebhook wires POST /webhooks/github, rejecting any request whose
 // HMAC-SHA256 signature doesn't match the App's webhook secret.
-func RegisterWebhook(r *gin.Engine, webhookSecret string) {
-	r.POST("/webhooks/github", handleWebhook(webhookSecret))
+// An optional queue.Client can be passed to automatically enqueue detection jobs.
+func RegisterWebhook(r *gin.Engine, webhookSecret string, q ...*queue.Client) {
+	var queueClient *queue.Client
+	if len(q) > 0 {
+		queueClient = q[0]
+	}
+	r.POST("/webhooks/github", handleWebhook(webhookSecret, queueClient))
 }
 
-func handleWebhook(webhookSecret string) gin.HandlerFunc {
+func handleWebhook(webhookSecret string, q *queue.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		body, err := io.ReadAll(c.Request.Body)
 		if err != nil {
@@ -35,8 +97,30 @@ func handleWebhook(webhookSecret string) gin.HandlerFunc {
 		delivery := c.GetHeader("X-GitHub-Delivery")
 		log.Printf("githubapp: webhook received (event=%s, delivery=%s, bytes=%d)", event, delivery, len(body))
 
-		// TODO(phase1): parse payload by event type (push, installation, ...)
-		// and enqueue a detection job onto SQS.
+		switch event {
+		case "push":
+			job, err := ParsePushEvent(body)
+			if err != nil {
+				log.Printf("githubapp: failed to parse push event: %v", err)
+				c.JSON(http.StatusBadRequest, gin.H{"error": "invalid push payload"})
+				return
+			}
+
+			if q != nil {
+				if err := q.SendJob(c.Request.Context(), job); err != nil {
+					log.Printf("githubapp: failed to enqueue detection job: %v", err)
+					c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to enqueue job"})
+					return
+				}
+				log.Printf("githubapp: enqueued detection job for %s/%s at commit %s",
+					job.RepositoryOwner, job.RepositoryName, job.CommitSHA)
+			} else {
+				log.Printf("githubapp: queue not configured, detection job logged: %s/%s at commit %s",
+					job.RepositoryOwner, job.RepositoryName, job.CommitSHA)
+			}
+		default:
+			log.Printf("githubapp: unhandled event type: %s", event)
+		}
 
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	}
