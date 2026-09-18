@@ -1,4 +1,5 @@
-import { SEVERITY_META, STATUS_META } from "@/lib/incident-meta";
+import { FlaskConical } from "lucide-react";
+import { MOTION_CLASS, SEVERITY_META, STATUS_META } from "@/lib/incident-meta";
 import type { IncidentStatus, Severity } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -31,6 +32,22 @@ export function SeverityBadge({ severity, className }: { severity: Severity; cla
   );
 }
 
+export function SimulatedBadge({ className }: { className?: string }) {
+  return (
+    <span
+      title="Created in simulation mode. No real credential is involved."
+      className={cn(
+        BADGE_BASE,
+        "border-simulation/30 bg-simulation/10 font-mono text-[11px] uppercase tracking-wider text-simulation",
+        className,
+      )}
+    >
+      <FlaskConical aria-hidden className="size-3.5" />
+      Simulated
+    </span>
+  );
+}
+
 export function StatusBadge({ status, className }: { status: IncidentStatus; className?: string }) {
   const meta = STATUS_META[status];
   const Icon = meta.icon;
@@ -39,14 +56,7 @@ export function StatusBadge({ status, className }: { status: IncidentStatus; cla
       title={meta.description}
       className={cn(BADGE_BASE, meta.text, meta.bg, meta.border, className)}
     >
-      <Icon
-        aria-hidden
-        className={cn(
-          "size-3.5 shrink-0",
-          meta.motion === "spin" && "animate-spin [animation-duration:2.5s]",
-          meta.motion === "pulse" && "animate-pulse",
-        )}
-      />
+      <Icon aria-hidden className={cn("size-3.5 shrink-0", meta.motion && MOTION_CLASS[meta.motion])} />
       {meta.label}
     </span>
   );
