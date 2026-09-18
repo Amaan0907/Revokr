@@ -4,8 +4,10 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { IncidentDetails } from "@/components/incident-detail/incident-details";
 import { IncidentHeader } from "@/components/incident-detail/incident-header";
+import { LiveIncidentProvider } from "@/components/incident-detail/incident-live";
+import { RemediationChecklist } from "@/components/incident-detail/remediation-checklist";
 import { RiskBreakdown } from "@/components/incident-detail/risk-breakdown";
-import { getMockIncidentDetail } from "@/lib/mock-data";
+import { getMockIncidentDetail, MOCK_OPERATOR } from "@/lib/mock-data";
 
 interface IncidentPageProps {
   params: Promise<{ id: string }>;
@@ -29,23 +31,28 @@ export default async function IncidentPage({ params }: IncidentPageProps) {
   const { incident } = detail;
 
   return (
-    <div className="flex flex-col gap-6">
-      <Link
-        href="/incidents"
-        className="inline-flex w-fit items-center gap-1.5 rounded-sm text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
-      >
-        <ArrowLeft aria-hidden className="size-4" />
-        Incidents
-      </Link>
+    <LiveIncidentProvider detail={detail} operator={MOCK_OPERATOR}>
+      <div className="flex flex-col gap-6">
+        <Link
+          href="/incidents"
+          className="inline-flex w-fit items-center gap-1.5 rounded-sm text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+        >
+          <ArrowLeft aria-hidden className="size-4" />
+          Incidents
+        </Link>
 
-      <IncidentHeader incident={incident} />
+        <IncidentHeader incident={incident} />
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="flex flex-col gap-6 lg:col-start-3">
-          <RiskBreakdown incident={incident} />
-          <IncidentDetails incident={incident} />
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="flex flex-col gap-6 lg:col-span-2">
+            <RemediationChecklist incident={incident} />
+          </div>
+          <div className="flex flex-col gap-6">
+            <RiskBreakdown incident={incident} />
+            <IncidentDetails incident={incident} />
+          </div>
         </div>
       </div>
-    </div>
+    </LiveIncidentProvider>
   );
 }

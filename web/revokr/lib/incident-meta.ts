@@ -1,16 +1,77 @@
 import type { LucideIcon } from "lucide-react";
 import {
+  BadgeCheck,
   Ban,
+  CircleCheck,
   CircleX,
+  FileKey,
+  Gauge,
   Hourglass,
+  KeyRound,
   LoaderCircle,
+  LockKeyhole,
   Radar,
   RefreshCw,
   ScanSearch,
   ShieldCheck,
   TriangleAlert,
+  UserRoundCheck,
+  UserRoundX,
 } from "lucide-react";
-import type { IncidentStatus, Severity } from "./types";
+import type {
+  ActionType,
+  AuditAction,
+  AuditLogEntry,
+  IncidentStatus,
+  Provider,
+  Severity,
+} from "./types";
+
+// The fixed order every rotation follows. Validation runs before the approval gate; the rest after.
+export const REMEDIATION_PLAN: ActionType[] = [
+  "VALIDATE_CREDENTIAL",
+  "ROTATE_CREDENTIAL",
+  "UPDATE_GITHUB_SECRET",
+  "DISABLE_OLD_CREDENTIAL",
+  "SEND_NOTIFICATION",
+];
+
+export const ACTION_META: Record<ActionType, { label: string; description: string }> = {
+  VALIDATE_CREDENTIAL: {
+    label: "Validate the leaked credential",
+    description: "Ask the provider whether the key still works.",
+  },
+  ROTATE_CREDENTIAL: {
+    label: "Create a replacement",
+    description: "Issue a new credential and confirm it works before touching anything else.",
+  },
+  UPDATE_GITHUB_SECRET: {
+    label: "Update the GitHub Actions secret",
+    description: "Encrypt the new value with the repository's public key and store it.",
+  },
+  DISABLE_OLD_CREDENTIAL: {
+    label: "Disable the leaked credential",
+    description: "Deactivate the old key, then confirm the provider rejects it.",
+  },
+  SEND_NOTIFICATION: {
+    label: "Notify the team",
+    description: "Post a summary of what happened to the security channel.",
+  },
+  CLEAN_HISTORY: {
+    label: "Clean git history",
+    description: "Remove the secret from past commits.",
+  },
+};
+
+export const PROVIDER_LABEL: Record<Provider, string> = {
+  aws: "AWS",
+  openai: "OpenAI",
+  github: "GitHub",
+  gcp: "GCP",
+  stripe: "Stripe",
+  slack: "Slack",
+  generic: "Generic",
+};
 
 // Full class names are spelled out so Tailwind can find them when it scans the source.
 interface Tone {
@@ -28,12 +89,17 @@ const UNSUPPORTED: Tone = { text: "text-unsupported", bg: "bg-unsupported/10", b
 
 export const SEVERITY_ORDER: Severity[] = ["CRITICAL", "HIGH", "MEDIUM", "LOW"];
 
-export const SEVERITY_META: Record<Severity, Tone & { label: string; level: number }> = {
-  CRITICAL: { label: "Critical", level: 4, text: "text-critical", bg: "bg-critical/10", border: "border-critical/25" },
-  HIGH: { label: "High", level: 3, text: "text-high", bg: "bg-high/10", border: "border-high/25" },
-  MEDIUM: { label: "Medium", level: 2, text: "text-medium", bg: "bg-medium/10", border: "border-medium/25" },
-  LOW: { label: "Low", level: 1, text: "text-low", bg: "bg-low/10", border: "border-low/25" },
+export const SEVERITY_META: Record<Severity, Tone & { label: string; level: number; fill: string }> = {
+  CRITICAL: { label: "Critical", level: 4, text: "text-critical", bg: "bg-critical/10", border: "border-critical/25", fill: "bg-critical" },
+  HIGH: { label: "High", level: 3, text: "text-high", bg: "bg-high/10", border: "border-high/25", fill: "bg-high" },
+  MEDIUM: { label: "Medium", level: 2, text: "text-medium", bg: "bg-medium/10", border: "border-medium/25", fill: "bg-medium" },
+  LOW: { label: "Low", level: 1, text: "text-low", bg: "bg-low/10", border: "border-low/25", fill: "bg-low" },
 };
+
+export const MOTION_CLASS = {
+  spin: "animate-spin [animation-duration:2.5s]",
+  pulse: "animate-pulse",
+} as const;
 
 export type StatusGroup = "active" | "attention" | "resolved" | "failed" | "closed";
 
@@ -115,3 +181,42 @@ export const STATUS_META: Record<
     group: "closed",
   },
 };
+
+export const AUDIT_ACTION_META: Record<AuditAction, { label: string; icon: LucideIcon }> = {
+  detected: { label: "Secret detected", icon: Radar },
+  validated: { label: "Validated", icon: BadgeCheck },
+  risk_scored: { label: "Risk scored", icon: Gauge },
+  auth_requested: { label: "Approval requested", icon: Hourglass },
+  approved: { label: "Rotation approved", icon: UserRoundCheck },
+  denied: { label: "Rotation denied", icon: UserRoundX },
+  key_created: { label: "Replacement key created", icon: KeyRound },
+  old_key_disabled: { label: "Leaked key disabled", icon: LockKeyhole },
+  gh_secret_updated: { label: "GitHub secret updated", icon: FileKey },
+  verified: { label: "Leaked key confirmed dead", icon: ShieldCheck },
+  resolved: { label: "Incident resolved", icon: CircleCheck },
+  failed: { label: "Remediation step failed", icon: CircleX },
+};
+
+export function auditLabel(entry: AuditLogEntry): string {
+  const { action, result } = entry;
+  if (action === "validated") {
+    if (result === "pending") return "Checking if the key is live";
+    if (result === "failure") return "Couldn't validate this secret";
+    return entry.metadata?.isLive === false ? "Key is not live" : "Confirmed live";
+  }
+  if (action === "verified" && result === "pending") return "Confirming the leaked key is dead";
+  if (action === "failed" && result === "pending") return "Needs manual rotation";
+  return AUDIT_ACTION_META[action].label;
+}
+
+export function auditTone(entry: AuditLogEntry): string {
+  if (entry.result === "failure") return "text-failed";
+  if (entry.result === "pending") {
+    if (entry.action === "auth_requested") return "text-approval";
+    if (entry.action === "failed") return "text-attention";
+    return "text-progress";
+  }
+  if (entry.action === "verified" || entry.action === "resolved") return "text-resolved";
+  if (entry.action === "approved") return "text-progress";
+  return "text-muted-foreground";
+}

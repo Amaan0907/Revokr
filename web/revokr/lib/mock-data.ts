@@ -8,6 +8,7 @@ import type {
   IncidentDetail,
   RemediationAction,
 } from "./types";
+import { REMEDIATION_PLAN } from "./incident-meta";
 
 // Timestamps are relative to page load so the demo always looks recent.
 const NOW = Date.now();
@@ -46,14 +47,6 @@ const REPOS = {
   },
 } as const;
 
-const PLAN: ActionType[] = [
-  "VALIDATE_CREDENTIAL",
-  "ROTATE_CREDENTIAL",
-  "UPDATE_GITHUB_SECRET",
-  "DISABLE_OLD_CREDENTIAL",
-  "SEND_NOTIFICATION",
-];
-
 function action(
   incidentId: string,
   index: number,
@@ -86,7 +79,7 @@ function remediation(
   return statuses.map((status, i) => {
     const start =
       i === 0 ? validatedMinutesAgo : (approvedMinutesAgo ?? 0) - 0.1 - (i - 1) * 0.4;
-    return action(incidentId, i, PLAN[i], status, start, error);
+    return action(incidentId, i, REMEDIATION_PLAN[i], status, start, error);
   });
 }
 
@@ -110,7 +103,7 @@ function timeline(incidentId: string, specs: LogSpec[]): AuditLogEntry[] {
   }));
 }
 
-const OPERATOR = "sameer-khan-1";
+export const MOCK_OPERATOR = "sameer-khan-1";
 
 const I1 = "3f9a6c21-8e4b-4d7a-b1c5-2a9e7f0d1c34";
 const I2 = "b82e4d17-0c6f-4a93-8e25-7f1d3c9a6b58";
@@ -203,7 +196,7 @@ const details: IncidentDetail[] = [
       [8.8, "validator", "validated", "success", { isLive: true }],
       [8.7, "risk-engine", "risk_scored", "success", { score: 81, severity: "HIGH" }],
       [8.6, "approval-gate", "auth_requested", "pending"],
-      [1.5, OPERATOR, "approved", "success"],
+      [1.5, MOCK_OPERATOR, "approved", "success"],
     ]),
     analysis: {
       summary:
@@ -247,7 +240,7 @@ const details: IncidentDetail[] = [
       [25.8, "validator", "validated", "success", { isLive: true }],
       [25.7, "risk-engine", "risk_scored", "success", { score: 74, severity: "HIGH" }],
       [25.6, "approval-gate", "auth_requested", "pending"],
-      [3, OPERATOR, "approved", "success"],
+      [3, MOCK_OPERATOR, "approved", "success"],
       [2.7, "openai-adapter", "key_created", "success", { newKey: "sk-proj-••••••••••••Lm4c" }],
       [2.3, "github-adapter", "gh_secret_updated", "success", { secret: "OPENAI_API_KEY", repository: "acme/ml-pipeline" }],
       [1.9, "openai-adapter", "old_key_disabled", "success"],
@@ -295,7 +288,7 @@ const details: IncidentDetail[] = [
       [299.8, "validator", "validated", "success", { isLive: true }],
       [299.7, "risk-engine", "risk_scored", "success", { score: 92, severity: "CRITICAL" }],
       [299.6, "approval-gate", "auth_requested", "pending"],
-      [292, OPERATOR, "approved", "success"],
+      [292, MOCK_OPERATOR, "approved", "success"],
       [291.7, "stripe-adapter", "key_created", "success", { newKey: "sk_live_••••••••••••9vRn" }],
       [291.3, "github-adapter", "gh_secret_updated", "success", { secret: "STRIPE_SECRET_KEY", repository: "acme/payments-api" }],
       [290.9, "stripe-adapter", "old_key_disabled", "success"],
@@ -346,7 +339,7 @@ const details: IncidentDetail[] = [
       [189.8, "validator", "validated", "success", { isLive: true }],
       [189.7, "risk-engine", "risk_scored", "success", { score: 48, severity: "MEDIUM" }],
       [189.6, "approval-gate", "auth_requested", "pending"],
-      [185, OPERATOR, "approved", "success"],
+      [185, MOCK_OPERATOR, "approved", "success"],
       [184.7, "slack-adapter", "failed", "pending", {
         reason: "Slack incoming webhooks can't be rotated through the API",
         nextStep: "Regenerate the webhook in Slack, then update SLACK_WEBHOOK_URL",
@@ -398,7 +391,7 @@ const details: IncidentDetail[] = [
       [539.8, "validator", "validated", "success", { isLive: true }],
       [539.7, "risk-engine", "risk_scored", "success", { score: 77, severity: "HIGH" }],
       [539.6, "approval-gate", "auth_requested", "pending"],
-      [530, OPERATOR, "approved", "success"],
+      [530, MOCK_OPERATOR, "approved", "success"],
       [529.7, "gcp-adapter", "failed", "failure", { step: "ROTATE_CREDENTIAL", oldKeyDisabled: false }],
     ]),
     analysis: {
@@ -546,7 +539,7 @@ const details: IncidentDetail[] = [
       [2879.8, "validator", "validated", "success", { isLive: true }],
       [2879.7, "risk-engine", "risk_scored", "success", { score: 55, severity: "MEDIUM" }],
       [2879.6, "approval-gate", "auth_requested", "pending"],
-      [2870, OPERATOR, "approved", "success"],
+      [2870, MOCK_OPERATOR, "approved", "success"],
       [2869.7, "openai-adapter", "key_created", "success", { newKey: "sk-proj-••••••••••••Pb7y" }],
       [2869.3, "github-adapter", "gh_secret_updated", "success", { secret: "OPENAI_API_KEY", repository: "acme/ml-pipeline" }],
       [2868.9, "openai-adapter", "old_key_disabled", "success"],
@@ -594,7 +587,7 @@ const details: IncidentDetail[] = [
       [4319.8, "validator", "validated", "success", { isLive: true }],
       [4319.7, "risk-engine", "risk_scored", "success", { score: 94, severity: "CRITICAL" }],
       [4319.6, "approval-gate", "auth_requested", "pending"],
-      [4300, OPERATOR, "approved", "success"],
+      [4300, MOCK_OPERATOR, "approved", "success"],
       [4299.7, "aws-adapter", "key_created", "success", { newAccessKeyId: "AKIA••••••••••••9WQD" }],
       [4299.3, "github-adapter", "gh_secret_updated", "success", { secret: "AWS_ACCESS_KEY_ID", repository: "acme/infra-terraform" }],
       [4298.9, "aws-adapter", "old_key_disabled", "success"],
@@ -615,6 +608,8 @@ const details: IncidentDetail[] = [
 ];
 
 export const mockIncidents: Incident[] = details.map((d) => d.incident);
+
+export const mockAuditLog: AuditLogEntry[] = details.flatMap((d) => d.auditLog);
 
 export function getMockIncidentDetail(id: string): IncidentDetail | undefined {
   return details.find((d) => d.incident.id === id);

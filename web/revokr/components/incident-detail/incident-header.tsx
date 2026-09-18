@@ -1,14 +1,11 @@
 import { CalendarClock, FileCode, FolderGit2, GitCommitHorizontal } from "lucide-react";
+import { LiveStatusBadge, LiveStatusCallout } from "./live-status";
 import { RiskGauge } from "./risk-gauge";
-import { SeverityBadge, SimulatedBadge, StatusBadge } from "@/components/incidents/badges";
+import { SeverityBadge, SimulatedBadge } from "@/components/incidents/badges";
 import { timeAgo } from "@/lib/format";
-import { MOTION_CLASS, STATUS_META } from "@/lib/incident-meta";
 import type { Incident } from "@/lib/types";
-import { cn } from "@/lib/utils";
 
 export function IncidentHeader({ incident }: { incident: Incident }) {
-  const status = STATUS_META[incident.status];
-  const StatusIcon = status.icon;
   const file =
     incident.lineNumber === null ? incident.filePath : `${incident.filePath}:${incident.lineNumber}`;
 
@@ -18,7 +15,7 @@ export function IncidentHeader({ incident }: { incident: Incident }) {
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <SeverityBadge severity={incident.severity} />
-            <StatusBadge status={incident.status} />
+            <LiveStatusBadge />
             {incident.simulated && <SimulatedBadge />}
           </div>
 
@@ -56,16 +53,7 @@ export function IncidentHeader({ incident }: { incident: Incident }) {
         <RiskGauge score={incident.riskScore} severity={incident.severity} />
       </div>
 
-      <div className={cn("flex items-start gap-3 rounded-lg border px-4 py-3 text-sm", status.bg, status.border)}>
-        <StatusIcon
-          aria-hidden
-          className={cn("mt-0.5 size-4 shrink-0", status.text, status.motion && MOTION_CLASS[status.motion])}
-        />
-        <p>
-          <span className={cn("font-medium", status.text)}>{status.label}.</span>{" "}
-          <span className="text-foreground/80">{status.description}</span>
-        </p>
-      </div>
+      <LiveStatusCallout />
     </header>
   );
 }
