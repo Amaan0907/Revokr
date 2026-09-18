@@ -159,6 +159,15 @@ func handleJob(ctx context.Context, pool *pgxpool.Pool, body string) error {
 				}); err != nil {
 					log.Printf("worker: audit log recorded for risk scoring warning: %v", err)
 				}
+
+				// Kick off validation immediately — DETECTED -> VALIDATING ->
+				// AWAITING_APPROVAL, calling the real or simulated adapter per
+				// inc.Simulated (see incidents.PerformValidation). A failure here
+				// lands the incident at FAILED with its own audit trail; it's
+				// logged, not fatal, so one bad incident doesn't stop the worker.
+				if err := incidents.PerformValidation(ctx, pool, inc, "worker"); err != nil {
+					log.Printf("worker: validation error for incident %s: %v", inc.ID, err)
+				}
 			}
 		} else {
 			// When running locally without populated repo tables, log safely with masked value

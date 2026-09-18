@@ -114,6 +114,38 @@ func handleTransitionIncident(pool *pgxpool.Pool) gin.HandlerFunc {
 			action = ActionApproved
 		}
 
+		// A transition to ROTATING is the one point in the lifecycle that
+		// must actually reach a provider.Adapter (real or simulated) — every
+		// other transition only ever changes a status row and writes an
+		// audit log, which plain Transition already does.
+		if req.TargetStatus == StatusValidating {
+			inc, err := GetByID(c.Request.Context(), pool, id)
+			if err != nil {
+				c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+				return
+			}
+			if err := PerformValidation(c.Request.Context(), pool, inc, actor); err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+				return
+			}
+			c.JSON(http.StatusOK, gin.H{"status": "ok", "new_status": StatusAwaitingApproval})
+			return
+		}
+
+		if req.TargetStatus == StatusRotating {
+			inc, err := GetByID(c.Request.Context(), pool, id)
+			if err != nil {
+				c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+				return
+			}
+			if err := PerformRotation(c.Request.Context(), pool, inc, actor, req.Metadata); err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+				return
+			}
+			c.JSON(http.StatusOK, gin.H{"status": "ok", "new_status": StatusResolved})
+			return
+		}
+
 		if err := Transition(c.Request.Context(), pool, id, req.TargetStatus, actor, action, req.Metadata); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return

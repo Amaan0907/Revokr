@@ -1,7 +1,16 @@
 package bedrock
-import "testing"
+import (
+	"testing"
+	"os"
+)
+
+
 
 func TestNewAnalyzer_ReturnsWorkingAnalyzer(t *testing.T) {
+
+	if os.Getenv("OPENAI_API_KEY")=="" {
+	t.Skip("OPENAI_API_KEY not set - skipping live analyzer check")
+}
 	analyzer:=NewAnalyzer()
 
 	inc:=SanitizedIncident{
