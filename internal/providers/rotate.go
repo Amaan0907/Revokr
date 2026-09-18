@@ -45,3 +45,11 @@ func Revoke(ctx context.Context, isSimulated bool, cred CredentialInput) (provid
 	adapter := Select(isSimulated)
 	return adapter.Revoke(ctx, cred.toCredential())
 }
+
+// Validate calls the adapter selected for isSimulated to check whether a
+// credential is actually live. Like Rotate and Revoke, it never touches a
+// database or an incident's status.
+func Validate(ctx context.Context, isSimulated bool, cred CredentialInput) (provider.ValidationResult, error) {
+	adapter := Select(isSimulated)
+	return adapter.Validate(ctx, cred.toCredential())
+}
