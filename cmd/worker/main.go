@@ -129,6 +129,36 @@ func handleJob(ctx context.Context, pool *pgxpool.Pool, body string) error {
 			} else {
 				log.Printf("worker: incident stored [id=%s provider=%s masked=%s severity=%s score=%d status=%s]",
 					inc.ID, inc.Provider, inc.MaskedValue, inc.Severity, inc.RiskScore, inc.Status)
+
+				// Record initial audit log for detection
+				if err := incidents.RecordAuditLog(ctx, pool, &incidents.AuditLog{
+					IncidentID: inc.ID,
+					Actor:      "worker",
+					Action:     incidents.ActionDetected,
+					Result:     incidents.ResultSuccess,
+					Metadata: map[string]any{
+						"file_path":   inc.FilePath,
+						"line_number": inc.LineNumber,
+						"commit_sha":  inc.CommitSHA,
+					},
+				}); err != nil {
+					log.Printf("worker: audit log recorded for detection warning: %v", err)
+				}
+
+				// Record audit log for risk score
+				if err := incidents.RecordAuditLog(ctx, pool, &incidents.AuditLog{
+					IncidentID: inc.ID,
+					Actor:      "risk-engine",
+					Action:     incidents.ActionRiskScored,
+					Result:     incidents.ResultSuccess,
+					Metadata: map[string]any{
+						"risk_score":   eval.Score,
+						"severity":     eval.Severity,
+						"risk_factors": eval.RiskFactors,
+					},
+				}); err != nil {
+					log.Printf("worker: audit log recorded for risk scoring warning: %v", err)
+				}
 			}
 		} else {
 			// When running locally without populated repo tables, log safely with masked value
