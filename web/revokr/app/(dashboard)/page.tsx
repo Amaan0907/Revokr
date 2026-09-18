@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Hourglass, ShieldAlert, ShieldCheck, Timer } from "lucide-react";
+import { ActivityFeed, type ActivityItem } from "@/components/overview/activity-feed";
 import { AttentionList } from "@/components/overview/attention-list";
 import { RemediationPipeline } from "@/components/overview/remediation-pipeline";
 import { SeverityBreakdown } from "@/components/overview/severity-breakdown";
@@ -8,7 +9,7 @@ import { StatCard } from "@/components/overview/stat-card";
 import { buttonVariants } from "@/components/ui/button";
 import { formatDuration } from "@/lib/format";
 import { STATUS_META } from "@/lib/incident-meta";
-import { mockIncidents } from "@/lib/mock-data";
+import { mockAuditLog, mockIncidents } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Overview" };
@@ -31,6 +32,15 @@ export default function OverviewPage() {
         0,
       ) / resolved.length
     : null;
+
+  const incidentById = new Map(incidents.map((i) => [i.id, i]));
+  const recentActivity: ActivityItem[] = [...mockAuditLog]
+    .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
+    .slice(0, 8)
+    .flatMap((entry) => {
+      const incident = incidentById.get(entry.incidentId);
+      return incident ? [{ entry, incident }] : [];
+    });
 
   return (
     <div className="flex flex-col gap-8">
@@ -95,7 +105,10 @@ export default function OverviewPage() {
         <div className="lg:col-span-2">
           <AttentionList incidents={needsAttention} />
         </div>
-        <SeverityBreakdown incidents={open} />
+        <div className="flex flex-col gap-6">
+          <SeverityBreakdown incidents={open} />
+          <ActivityFeed items={recentActivity} />
+        </div>
       </div>
     </div>
   );
