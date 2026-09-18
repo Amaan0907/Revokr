@@ -7,7 +7,7 @@ type Analysis struct {
 	WhyItMatters 				string
 	RecommendedResponse string
 	Confidence 					float64 // 0.0-1.0
-	Source 							string // "bedrock" or "template" the ui must hsow it never hide it
+	Source 							string // "openai" or "template" the ui must hsow it never hide it
 
 }
 
