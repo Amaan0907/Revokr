@@ -1,6 +1,6 @@
 module github.com/Amaan0907/Revokr
 
-go 1.25.5
+go 1.26.0
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.47.0
@@ -13,7 +13,16 @@ require (
 )
 
 require (
-	github.com/aws/aws-sdk-go-v2/credentials v1.20.5 // indirect
+	github.com/aws/aws-sdk-go-v2/credentials v1.20.5
+	golang.org/x/crypto v0.57.0
+)
+
+require (
+	github.com/aws/aws-sdk-go-v2/service/iam v1.64.0
+	github.com/aws/aws-sdk-go-v2/service/sts v1.51.0
+)
+
+require (
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.20.0 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.5.3 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.8.3 // indirect
@@ -23,7 +32,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/signin v1.10.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.38.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.43.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sts v1.51.0 // indirect
 	github.com/aws/smithy-go v1.28.1 // indirect
 	github.com/bytedance/gopkg v0.1.3 // indirect
 	github.com/bytedance/sonic v1.15.0 // indirect
@@ -52,10 +60,9 @@ require (
 	github.com/ugorji/go/codec v1.3.1 // indirect
 	go.mongodb.org/mongo-driver/v2 v2.5.0 // indirect
 	golang.org/x/arch v0.22.0 // indirect
-	golang.org/x/crypto v0.48.0 // indirect
-	golang.org/x/net v0.51.0 // indirect
-	golang.org/x/sync v0.19.0 // indirect
-	golang.org/x/sys v0.41.0 // indirect
-	golang.org/x/text v0.34.0 // indirect
+	golang.org/x/net v0.58.0 // indirect
+	golang.org/x/sync v0.23.0 // indirect
+	golang.org/x/sys v0.48.0 // indirect
+	golang.org/x/text v0.42.0 // indirect
 	google.golang.org/protobuf v1.36.10 // indirect
 )
