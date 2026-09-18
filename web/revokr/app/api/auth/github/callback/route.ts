@@ -7,6 +7,7 @@ interface GitHubUser {
   login: string;
   name: string | null;
   avatar_url: string | null;
+  email: string | null;
 }
 
 function fail(request: NextRequest, error: string) {
@@ -60,7 +61,13 @@ export async function GET(request: NextRequest) {
   const session = encodeSession(
     {
       mode: "github",
-      user: { id: user.id, login: user.login, name: user.name, avatarUrl: user.avatar_url },
+      user: {
+        id: String(user.id),
+        login: user.login,
+        name: user.name,
+        avatarUrl: user.avatar_url,
+        email: user.email,
+      },
     },
     token.access_token,
   );

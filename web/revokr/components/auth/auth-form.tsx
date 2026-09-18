@@ -3,6 +3,7 @@ import Link from "next/link";
 import { CircleAlert, FlaskConical, Lock } from "lucide-react";
 import { DemoButton } from "./demo-button";
 import { GitHubMark } from "@/components/icons/github-mark";
+import { GoogleMark } from "@/components/icons/google-mark";
 import { LogoMark } from "@/components/shell/logo";
 import { buttonVariants } from "@/components/ui/button";
 import { AUTH_ERRORS } from "@/lib/auth-config";
@@ -14,7 +15,9 @@ interface AuthFormProps {
   next: string;
   error?: string;
   githubEnabled: boolean;
-  githubLabel: string;
+  googleEnabled: boolean;
+  // Verb for the provider buttons: "Continue" on sign-in, "Sign up" on sign-up.
+  action: string;
   switchPrompt: string;
   switchHref: string;
   switchLabel: string;
@@ -23,19 +26,49 @@ interface AuthFormProps {
 
 const WIDE = "h-12 w-full text-[15px]";
 
+// Google's dark-theme button colours: near-black fill, grey outline, light grey text.
+const GOOGLE =
+  "border-[#8e918f]/60 bg-[#131314] text-[#e3e3e3] backdrop-blur-none hover:bg-[#1e1f20]";
+
+// A link that starts the provider's sign-in, or a disabled button when it isn't configured.
+function ProviderButton({
+  enabled,
+  href,
+  className,
+  children,
+}: {
+  enabled: boolean;
+  href: string;
+  className: string;
+  children: ReactNode;
+}) {
+  return enabled ? (
+    <a href={href} className={className}>
+      {children}
+    </a>
+  ) : (
+    <button type="button" disabled className={className}>
+      {children}
+    </button>
+  );
+}
+
 export function AuthForm({
   title,
   description,
   next,
   error,
   githubEnabled,
-  githubLabel,
+  googleEnabled,
+  action,
   switchPrompt,
   switchHref,
   switchLabel,
   children,
 }: AuthFormProps) {
   const errorMessage = error ? (AUTH_ERRORS[error] ?? "Something went wrong. Please try again.") : null;
+  const unconfigured = [!githubEnabled && "GitHub", !googleEnabled && "Google"].filter(Boolean);
+  const nextParam = encodeURIComponent(next);
 
   return (
     <div>
@@ -69,21 +102,29 @@ export function AuthForm({
       )}
 
       <div className="mt-9 flex animate-rise flex-col gap-3" style={{ animationDelay: "240ms" }}>
-        {githubEnabled ? (
-          <a href={`/api/auth/github?next=${encodeURIComponent(next)}`} className={cn(buttonVariants({ size: "lg" }), WIDE)}>
-            <GitHubMark className="size-[18px]" />
-            {githubLabel}
-          </a>
-        ) : (
-          <div className="flex flex-col gap-2.5">
-            <button type="button" disabled className={cn(buttonVariants({ size: "lg" }), WIDE)}>
-              <GitHubMark className="size-[18px]" />
-              {githubLabel}
-            </button>
-            <p className="text-center text-xs leading-relaxed text-muted-foreground">
-              GitHub sign-in isn&apos;t set up on this deployment yet. The live demo works right away.
-            </p>
-          </div>
+        <ProviderButton
+          enabled={githubEnabled}
+          href={`/api/auth/github?next=${nextParam}`}
+          className={cn(buttonVariants({ size: "lg" }), WIDE)}
+        >
+          <GitHubMark className="size-[18px]" />
+          {action} with GitHub
+        </ProviderButton>
+
+        <ProviderButton
+          enabled={googleEnabled}
+          href={`/api/auth/google?next=${nextParam}`}
+          className={cn(buttonVariants({ variant: "outline", size: "lg" }), WIDE, GOOGLE)}
+        >
+          <GoogleMark className="size-[18px]" />
+          {action} with Google
+        </ProviderButton>
+
+        {unconfigured.length > 0 && (
+          <p className="text-center text-xs leading-relaxed text-muted-foreground">
+            {unconfigured.join(" and ")} sign-in {unconfigured.length > 1 ? "aren't" : "isn't"} set up
+            on this deployment yet. The live demo works right away.
+          </p>
         )}
 
         <div className="my-2 flex items-center gap-4 text-xs text-muted-foreground">
@@ -113,8 +154,8 @@ export function AuthForm({
       <p className="mt-6 flex items-start justify-center gap-2 text-center text-xs leading-relaxed text-muted-foreground">
         <Lock aria-hidden className="mt-0.5 size-3.5 shrink-0" />
         <span>
-          Signing in only shares your public GitHub profile. Repository access is granted separately,
-          when you install the Revokr GitHub App.
+          Signing in only shares your name, email address and profile picture. Repository access is
+          granted separately, when you install the Revokr GitHub App.
         </span>
       </p>
     </div>

@@ -170,7 +170,7 @@ export function Sidebar({
           <div className="min-w-0 flex-1">
             <p className="truncate text-[13px] font-medium">{user.name ?? user.login}</p>
             <p className="truncate text-xs text-muted-foreground">
-              {mode === "demo" ? "Demo session" : `@${user.login}`}
+              {mode === "demo" ? "Demo session" : mode === "google" ? (user.email ?? user.login) : `@${user.login}`}
             </p>
           </div>
           <form action="/api/auth/logout" method="post">

@@ -86,7 +86,7 @@ export function Hero({ signedIn }: { signedIn: boolean }) {
           style={{ animationDelay: "680ms" }}
         >
           <Lock aria-hidden className="size-3.5" />
-          Sign in with GitHub. You choose which repositories Revokr can see.
+          Sign in with GitHub or Google. You choose which repositories Revokr can see.
         </p>
       </ScrollFade>
 

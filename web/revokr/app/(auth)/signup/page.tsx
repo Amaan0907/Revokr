@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AuthForm } from "@/components/auth/auth-form";
-import { isGitHubLoginEnabled, safeNextPath } from "@/lib/auth-config";
+import { isGitHubLoginEnabled, isGoogleLoginEnabled, safeNextPath } from "@/lib/auth-config";
 import { getSession } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Create your account" };
 
 const STEPS = [
-  { title: "Sign up with GitHub", body: "No password to create or remember." },
+  { title: "Sign up with GitHub or Google", body: "No new password to create or remember." },
   { title: "Install the Revokr app", body: "Pick the repositories Revokr should watch." },
   { title: "Approve rotations", body: "Get alerted on leaks and fix them in one click." },
 ];
@@ -24,11 +24,12 @@ export default async function SignupPage({ searchParams }: SignupPageProps) {
   return (
     <AuthForm
       title="Create your Revokr account"
-      description="Revokr connects to GitHub, so setup takes about a minute."
+      description="Setup takes about a minute. Your repositories connect through GitHub."
       next={next}
       error={typeof params.error === "string" ? params.error : undefined}
       githubEnabled={isGitHubLoginEnabled()}
-      githubLabel="Sign up with GitHub"
+      googleEnabled={isGoogleLoginEnabled()}
+      action="Sign up"
       switchPrompt="Already have an account?"
       switchHref="/login"
       switchLabel="Sign in"

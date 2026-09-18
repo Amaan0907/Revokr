@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AuthForm } from "@/components/auth/auth-form";
-import { isGitHubLoginEnabled, safeNextPath } from "@/lib/auth-config";
+import { isGitHubLoginEnabled, isGoogleLoginEnabled, safeNextPath } from "@/lib/auth-config";
 import { getSession } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Sign in" };
@@ -22,7 +22,8 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
       next={next}
       error={typeof params.error === "string" ? params.error : undefined}
       githubEnabled={isGitHubLoginEnabled()}
-      githubLabel="Continue with GitHub"
+      googleEnabled={isGoogleLoginEnabled()}
+      action="Continue"
       switchPrompt="New to Revokr?"
       switchHref="/signup"
       switchLabel="Create an account"

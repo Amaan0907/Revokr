@@ -12,13 +12,16 @@ import { cookies } from "next/headers";
 export const SESSION_COOKIE = "revokr_session";
 const MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
 
-export type SessionMode = "github" | "demo";
+export type SessionMode = "github" | "google" | "demo";
 
 export interface SessionUser {
-  id: number;
+  // A string because Google account IDs are too long to be JavaScript numbers.
+  id: string;
+  // GitHub username, or the email address for Google accounts.
   login: string;
   name: string | null;
   avatarUrl: string | null;
+  email?: string | null;
 }
 
 export interface Session {
