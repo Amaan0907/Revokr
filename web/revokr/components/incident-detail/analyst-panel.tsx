@@ -33,32 +33,23 @@ interface AnalystPanelProps {
   initialStatus: IncidentStatus;
 }
 
-// Wrapped in an Apple Intelligence-style animated spectrum edge, so AI-written text is unmistakable.
 export function AnalystPanel({ analysis, initialStatus }: AnalystPanelProps) {
   const { status } = useLiveIncident();
   const source = analysis ? SOURCE[analysis.source] : null;
   const SourceIcon = source?.icon;
-  const bedrock = analysis?.source === "bedrock";
 
   return (
     <section aria-labelledby="analyst-heading" className="relative">
-      {bedrock && (
-        // A spectrum halo from coloured shadows: drawn once, unlike an animated blurred glow.
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 rounded-3xl shadow-[-14px_-10px_40px_-14px_rgb(255_159_10/0.45),14px_10px_40px_-14px_rgb(41_151_255/0.5),0_0_48px_-16px_rgb(191_90_242/0.6)]"
-        />
-      )}
       <div className="surface relative overflow-hidden rounded-3xl p-6">
         <span
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-linear-to-b from-simulation/[0.08] to-transparent"
+          className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-linear-to-b from-white/[0.04] to-transparent"
         />
 
         <div className="relative flex items-center justify-between gap-3">
           <h2 id="analyst-heading" className="flex items-center gap-2 text-[17px] font-semibold tracking-[-0.015em]">
             <Sparkles aria-hidden className="size-[18px] text-simulation" />
-            <span className="text-spectrum">AI incident analyst</span>
+            <span className="text-silver">AI incident analyst</span>
           </h2>
           {source && SourceIcon && (
             <span
@@ -97,7 +88,7 @@ export function AnalystPanel({ analysis, initialStatus }: AnalystPanelProps) {
               <div aria-hidden className="h-1.5 flex-1 rounded-full bg-white/[0.08]">
                 <WipeIn className="h-full" delay={0.4}>
                   <div
-                    className="h-full rounded-full bg-linear-to-r from-simulation to-link"
+                    className="h-full rounded-full bg-linear-to-r from-white/40 to-white/80"
                     style={{ width: `${analysis.confidence * 100}%` }}
                   />
                 </WipeIn>
@@ -130,12 +121,6 @@ export function AnalystPanel({ analysis, initialStatus }: AnalystPanelProps) {
           Only sanitized metadata is sent for analysis. The secret itself never reaches the model.
         </p>
       </div>
-      {bedrock && (
-        <div
-          aria-hidden
-          className="glow-fill glow-ring animate-glow-spin pointer-events-none absolute inset-0 rounded-3xl opacity-70"
-        />
-      )}
     </section>
   );
 }

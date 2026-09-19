@@ -16,7 +16,7 @@ interface RiskGaugeProps {
   gradientId?: string;
 }
 
-// An Activity-style ring: a dim track in the severity colour with a glowing gradient arc on top.
+// An Activity-style ring: a dim track in the severity colour with a gradient arc on top.
 export function RiskGauge({ score, severity, size = "md", gradientId }: RiskGaugeProps) {
   const meta = SEVERITY_META[severity];
   const { box, stroke, score: scoreClass } = SIZES[size];
@@ -57,12 +57,7 @@ export function RiskGauge({ score, severity, size = "md", gradientId }: RiskGaug
           strokeDasharray={circumference}
           strokeDashoffset={offset}
           className="animate-draw"
-          style={
-            {
-              "--gauge-length": String(circumference),
-              filter: "drop-shadow(0 0 5px color-mix(in srgb, currentColor 50%, transparent))",
-            } as CSSProperties
-          }
+          style={{ "--gauge-length": String(circumference) } as CSSProperties}
         />
       </svg>
       <div aria-hidden className="text-center">

@@ -54,7 +54,7 @@ export function StatCard({ label, value, unit, detail, icon: Icon, tone, href, i
         />
       </div>
       <p className="mt-7 flex items-baseline gap-1.5">
-        <span className="text-[40px] font-semibold leading-none tracking-[-0.045em] tabular-nums">
+        <span className="text-[32px] font-semibold leading-none tracking-[-0.045em] tabular-nums">
           {typeof value === "number" ? <CountUp value={value} /> : value}
         </span>
         {unit && <span className="text-[15px] font-medium text-muted-foreground">{unit}</span>}

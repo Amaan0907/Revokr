@@ -5,21 +5,16 @@ import { SeverityBadge, SimulatedBadge } from "@/components/incidents/badges";
 import { timeAgo } from "@/lib/format";
 import type { Incident } from "@/lib/types";
 
-// Spelled out in full so Tailwind finds each class when it scans the source.
-const GLOW = {
-  CRITICAL: "bg-[radial-gradient(50%_90%_at_100%_0%,rgb(255_69_58/0.14),transparent_70%)]",
-  HIGH: "bg-[radial-gradient(50%_90%_at_100%_0%,rgb(255_159_10/0.13),transparent_70%)]",
-  MEDIUM: "bg-[radial-gradient(50%_90%_at_100%_0%,rgb(255_214_10/0.11),transparent_70%)]",
-  LOW: "bg-[radial-gradient(50%_90%_at_100%_0%,rgb(100_210_255/0.12),transparent_70%)]",
-} as const;
-
 export function IncidentHeader({ incident }: { incident: Incident }) {
   const file =
     incident.lineNumber === null ? incident.filePath : `${incident.filePath}:${incident.lineNumber}`;
 
   return (
     <header className="surface relative overflow-hidden rounded-3xl p-6 animate-in fade-in slide-in-from-bottom-2 animation-duration-700 fill-mode-both sm:p-8">
-      <div aria-hidden className={`pointer-events-none absolute inset-0 ${GLOW[incident.severity]}`} />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(50%_90%_at_100%_0%,rgb(255_255_255/0.06),transparent_70%)]"
+      />
 
       <div className="relative flex flex-col-reverse gap-6 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
@@ -29,7 +24,7 @@ export function IncidentHeader({ incident }: { incident: Incident }) {
             {incident.simulated && <SimulatedBadge />}
           </div>
 
-          <h1 className="mt-4 text-[length:clamp(1.75rem,3.5vw,2.5rem)] font-bold leading-tight tracking-[-0.035em] text-balance">
+          <h1 className="mt-4 text-[length:clamp(1.5rem,2.8vw,2rem)] font-bold leading-tight tracking-[-0.035em] text-balance">
             {incident.secretType}
           </h1>
           <code className="mt-3 inline-block max-w-full truncate rounded-xl bg-white/[0.06] px-3 py-1.5 font-mono text-sm ring-1 ring-inset ring-white/[0.06]">

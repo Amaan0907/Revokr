@@ -1,96 +1,101 @@
 import Link from "next/link";
-import { ArrowRight, ChevronRight, Lock } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { MousePointerClick, RefreshCw, ShieldCheck } from "lucide-react";
 import { HeroShowcase } from "./hero-showcase";
+import { IconBox } from "./icon-box";
+import { RotatingWord } from "./rotating-word";
+import { SectionHeading } from "./section-heading";
 import { DemoButton } from "@/components/auth/demo-button";
-import { ScrollFade } from "@/components/motion/scroll-fade";
-import { buttonVariants } from "@/components/ui/button";
+import { HoverButtonContent, hoverButtonVariants } from "@/components/ui/hover-button";
 
 // Each headline word rises in on its own beat; delays are inline so the CSS stays generic.
 const WORD = "animate-rise inline-block pb-[0.1em]";
 
+// Each point mirrors a step of the incident the replay plays.
+const POINTS: { icon: LucideIcon; title: string; body: string }[] = [
+  { icon: ShieldCheck, title: "Proven live", body: "Checked with AWS before you're alerted." },
+  { icon: RefreshCw, title: "Replace first", body: "The old key is revoked last." },
+  { icon: MousePointerClick, title: "One click", body: "Nothing rotates until you approve." },
+];
+
+// A short headline, one sentence and two actions, with the product on its own band just below.
 export function Hero({ signedIn }: { signedIn: boolean }) {
   return (
-    <section className="relative isolate overflow-hidden pb-28">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[48rem] bg-[radial-gradient(55%_50%_at_50%_0%,rgb(41_151_255/0.16),transparent_75%)]"
-      />
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 bg-grid opacity-70" />
-
-      <ScrollFade className="mx-auto max-w-5xl px-4 pt-16 text-center sm:px-6 sm:pt-24">
-        <a
-          href="#how-it-works"
-          className="glass-control animate-rise inline-flex items-center gap-2 rounded-full py-1 pl-1.5 pr-3 text-[13px] text-muted-foreground transition-colors hover:bg-white/[0.13] hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
-        >
-          <span className="flex items-center gap-1.5 rounded-full bg-resolved/15 px-2 py-0.5 text-[11px] font-semibold text-resolved">
-            <span className="relative flex size-1.5">
-              <span className="absolute inset-0 animate-ping rounded-full bg-resolved" />
-              <span className="relative size-1.5 rounded-full bg-resolved" />
+    <>
+      <section className="border-b border-white/[0.08]">
+        {/* The header floats over the top of this section, so it fills the whole first screen. */}
+        <div className="flex min-h-dvh flex-col items-start justify-center px-5 py-14 text-left sm:pl-14 sm:pr-8 lg:pl-16">
+          <h1 className="text-[length:clamp(2.7rem,4.9vw,3.96rem)] font-semibold leading-[1.05] tracking-[-0.045em]">
+            <span className={`${WORD} text-silver`} style={{ animationDelay: "80ms" }}>
+              Leaked.
+            </span>{" "}
+            <span className={`${WORD} text-silver`} style={{ animationDelay: "200ms" }}>
+              Replaced.
+            </span>{" "}
+            <span className={WORD} style={{ animationDelay: "320ms" }}>
+              <RotatingWord words={["Secured.", "Revoked."]} className="text-fade" />
             </span>
-            Live
-          </span>
-          Watching every push, in real time
-          <ChevronRight aria-hidden className="size-3.5" />
-        </a>
+          </h1>
 
-        <h1 className="mt-8 text-[length:clamp(3.25rem,9vw,6.5rem)] font-semibold leading-[0.98] tracking-[-0.05em]">
-          <span className={`${WORD} text-silver`} style={{ animationDelay: "80ms" }}>
-            Leaked.
-          </span>{" "}
-          <span className={`${WORD} text-silver`} style={{ animationDelay: "220ms" }}>
-            Replaced.
-          </span>
-          <br />
-          <span className={`${WORD} text-spectrum`} style={{ animationDelay: "360ms" }}>
-            Revoked.
-          </span>
-        </h1>
+          <p
+            className="animate-lift mt-5 max-w-md text-[18px] leading-relaxed text-muted-foreground"
+            style={{ animationDelay: "420ms" }}
+          >
+            Revokr replaces a leaked key, then revokes the old one. You just approve.
+          </p>
 
-        <p
-          className="animate-lift mx-auto mt-8 max-w-2xl text-[length:clamp(1.125rem,2.1vw,1.375rem)] font-medium leading-snug tracking-[-0.015em] text-muted-foreground text-balance"
-          style={{ animationDelay: "480ms" }}
-        >
-          Revokr catches secrets the moment they&apos;re pushed to GitHub, proves they&apos;re live,
-          and swaps in a working replacement <span className="text-foreground">before</span> it kills
-          the leaked key. You approve. It does the rest.
-        </p>
-
-        <div
-          className="animate-lift mt-10 flex flex-col items-center justify-center gap-5 sm:flex-row sm:gap-7"
-          style={{ animationDelay: "600ms" }}
-        >
-          {signedIn ? (
-            <Link href="/dashboard" className={buttonVariants({ size: "xl" })}>
-              Open your dashboard
-              <ArrowRight aria-hidden data-icon="inline-end" />
-            </Link>
-          ) : (
-            <>
-              <Link href="/signup" className={buttonVariants({ size: "xl" })}>
-                Get started
-                <ArrowRight aria-hidden data-icon="inline-end" />
+          <div
+            className="animate-lift mt-6 flex flex-wrap items-center gap-3"
+            style={{ animationDelay: "520ms" }}
+          >
+            {signedIn ? (
+              <Link href="/dashboard" className={hoverButtonVariants({ size: "hero" })}>
+                <HoverButtonContent>Open dashboard</HoverButtonContent>
               </Link>
-              <DemoButton className="group inline-flex cursor-pointer items-center gap-1 rounded-sm text-[17px] text-link underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-ring">
-                Try the live demo
-                <ChevronRight
-                  aria-hidden
-                  className="size-4 transition-transform duration-200 group-hover:translate-x-0.5"
-                />
-              </DemoButton>
-            </>
-          )}
+            ) : (
+              <>
+                <Link href="/signup" className={hoverButtonVariants({ size: "hero" })}>
+                  <HoverButtonContent>Get started</HoverButtonContent>
+                </Link>
+                <DemoButton className={hoverButtonVariants({ variant: "outline", size: "hero" })}>
+                  <HoverButtonContent>Try the demo</HoverButtonContent>
+                </DemoButton>
+              </>
+            )}
+          </div>
         </div>
+      </section>
 
-        <p
-          className="animate-lift mt-6 flex items-center justify-center gap-1.5 text-[13px] text-muted-foreground"
-          style={{ animationDelay: "680ms" }}
-        >
-          <Lock aria-hidden className="size-3.5" />
-          Sign in with GitHub or Google. You choose which repositories Revokr can see.
-        </p>
-      </ScrollFade>
+      {/* Copy on the left explains the replay on the right; the left edge matches the hero's text. */}
+      <section
+        aria-label="Product preview"
+        className="border-b border-white/[0.08] px-5 py-12 sm:pl-14 sm:pr-8 lg:pl-16"
+      >
+        <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,40rem)] lg:gap-16">
+          <div>
+            <SectionHeading
+              eyebrow="One incident, start to finish"
+              title="Fifteen seconds from leaked to dead."
+              description="Watch a real AWS key go from a push to fully revoked."
+            />
+            <ul className="mt-7 flex flex-col gap-4">
+              {POINTS.map((point) => (
+                <li key={point.title} className="flex items-center gap-3.5">
+                  <IconBox icon={point.icon} />
+                  <div className="min-w-0">
+                    <p className="text-[15px] font-semibold tracking-[-0.015em]">{point.title}</p>
+                    <p className="text-[13px] text-muted-foreground">{point.body}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
 
-      <HeroShowcase />
-    </section>
+          <div className="min-w-0">
+            <HeroShowcase />
+          </div>
+        </div>
+      </section>
+    </>
   );
 }

@@ -52,7 +52,7 @@ export default async function OverviewPage() {
           <p className="text-[15px] font-medium text-muted-foreground">
             Welcome back{firstName && `, ${firstName}`}
           </p>
-          <h1 className="mt-1 text-[34px] font-bold leading-tight tracking-[-0.035em]">Overview</h1>
+          <h1 className="mt-1 text-[28px] font-bold leading-tight tracking-[-0.035em]">Overview</h1>
           <p className="mt-1 max-w-xl text-[15px] text-muted-foreground">
             Leaked secrets across {organization}&apos;s repositories, and where each one is in
             remediation.

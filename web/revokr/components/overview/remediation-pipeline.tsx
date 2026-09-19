@@ -65,7 +65,7 @@ export function RemediationPipeline({ incidents }: { incidents: Incident[] }) {
                 </span>
                 <span
                   className={cn(
-                    "mt-3 text-[28px] font-semibold leading-none tracking-[-0.03em] tabular-nums",
+                    "mt-3 text-[24px] font-semibold leading-none tracking-[-0.03em] tabular-nums",
                     !active && "text-muted-foreground/50",
                   )}
                 >

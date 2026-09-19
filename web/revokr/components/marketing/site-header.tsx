@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { HeaderCapsule } from "./header-capsule";
 import { Logo } from "@/components/shell/logo";
 import { buttonVariants } from "@/components/ui/button";
+import { HoverButtonContent, hoverButtonVariants } from "@/components/ui/hover-button";
 import { cn } from "@/lib/utils";
 
 const LINKS = [
@@ -10,11 +10,13 @@ const LINKS = [
   { href: "#security", label: "Security" },
 ];
 
-// A floating Liquid Glass capsule rather than an edge-to-edge bar.
+// A floating glass pill, 80% of the screen wide and centred. The header row itself is pulled up
+// over the top of the page (the negative margin cancels its height), so the glass has the hero
+// behind it to blur; the row ignores the pointer so only the pill itself catches clicks.
 export function SiteHeader({ signedIn }: { signedIn: boolean }) {
   return (
-    <header className="sticky top-0 z-50 px-3 pt-3">
-      <HeaderCapsule>
+    <header className="pointer-events-none sticky top-0 z-50 -mb-[4.75rem] flex justify-center pt-3">
+      <div className="glass-rim pointer-events-auto relative flex h-16 w-[80vw] items-center justify-between gap-6 rounded-full bg-white/[0.07] pl-6 pr-3 shadow-[inset_0_1px_0_rgb(255_255_255/0.14),0_16px_48px_-12px_rgb(0_0_0/0.7)] backdrop-blur-xl backdrop-saturate-150">
         <Link
           href="/"
           aria-label="Revokr home"
@@ -23,7 +25,7 @@ export function SiteHeader({ signedIn }: { signedIn: boolean }) {
           <Logo />
         </Link>
 
-        <nav aria-label="Primary" className="hidden items-center gap-8 md:flex">
+        <nav aria-label="Primary" className="hidden items-center gap-7 md:flex">
           {LINKS.map((link) => (
             <a
               key={link.href}
@@ -37,8 +39,8 @@ export function SiteHeader({ signedIn }: { signedIn: boolean }) {
 
         <div className="flex items-center gap-1">
           {signedIn ? (
-            <Link href="/dashboard" className={buttonVariants({ size: "sm" })}>
-              Open dashboard
+            <Link href="/dashboard" className={hoverButtonVariants({ size: "sm" })}>
+              <HoverButtonContent>Open dashboard</HoverButtonContent>
             </Link>
           ) : (
             <>
@@ -48,13 +50,13 @@ export function SiteHeader({ signedIn }: { signedIn: boolean }) {
               >
                 Sign in
               </Link>
-              <Link href="/signup" className={buttonVariants({ size: "sm" })}>
-                Get started
+              <Link href="/signup" className={hoverButtonVariants({ size: "sm" })}>
+                <HoverButtonContent>Get started</HoverButtonContent>
               </Link>
             </>
           )}
         </div>
-      </HeaderCapsule>
+      </div>
     </header>
   );
 }

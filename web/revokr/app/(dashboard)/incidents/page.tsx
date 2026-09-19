@@ -16,7 +16,7 @@ export default async function IncidentsPage({ searchParams }: IncidentsPageProps
   return (
     <div className="flex flex-col gap-7">
       <header>
-        <h1 className="text-[34px] font-bold leading-tight tracking-[-0.035em]">Incidents</h1>
+        <h1 className="text-[28px] font-bold leading-tight tracking-[-0.035em]">Incidents</h1>
         <p className="mt-1 text-[15px] text-muted-foreground">
           Every secret Revokr has found in {organization}&apos;s repositories.
         </p>

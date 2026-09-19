@@ -94,10 +94,10 @@ export const SEVERITY_META: Record<
   Severity,
   Tone & { label: string; level: number; fill: string; ring: [string, string] }
 > = {
-  CRITICAL: { label: "Critical", level: 4, text: "text-critical", bg: "bg-critical/15", border: "border-critical/30", fill: "bg-critical", ring: ["#ff2d55", "#ff6b3d"] },
-  HIGH: { label: "High", level: 3, text: "text-high", bg: "bg-high/15", border: "border-high/30", fill: "bg-high", ring: ["#ff7a00", "#ffc233"] },
-  MEDIUM: { label: "Medium", level: 2, text: "text-medium", bg: "bg-medium/15", border: "border-medium/30", fill: "bg-medium", ring: ["#ffb800", "#fff04d"] },
-  LOW: { label: "Low", level: 1, text: "text-low", bg: "bg-low/15", border: "border-low/30", fill: "bg-low", ring: ["#0a84ff", "#64d2ff"] },
+  CRITICAL: { label: "Critical", level: 4, text: "text-critical", bg: "bg-critical/15", border: "border-critical/30", fill: "bg-critical", ring: ["#a4544f", "#c98882"] },
+  HIGH: { label: "High", level: 3, text: "text-high", bg: "bg-high/15", border: "border-high/30", fill: "bg-high", ring: ["#a37a54", "#c9a683"] },
+  MEDIUM: { label: "Medium", level: 2, text: "text-medium", bg: "bg-medium/15", border: "border-medium/30", fill: "bg-medium", ring: ["#978b62", "#c4ba90"] },
+  LOW: { label: "Low", level: 1, text: "text-low", bg: "bg-low/15", border: "border-low/30", fill: "bg-low", ring: ["#75899a", "#a6b8c4"] },
 };
 
 export const MOTION_CLASS = {

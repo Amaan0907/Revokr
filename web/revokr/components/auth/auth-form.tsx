@@ -73,15 +73,11 @@ export function AuthForm({
   return (
     <div>
       <div className="flex flex-col items-center text-center">
-        <div className="relative animate-rise">
-          <div
-            aria-hidden
-            className="absolute inset-0 rounded-[18px] shadow-[-12px_-4px_36px_-6px_rgb(255_159_10/0.4),12px_4px_36px_-6px_rgb(41_151_255/0.45),0_0_44px_-4px_rgb(191_90_242/0.5)]"
-          />
-          <LogoMark className="relative size-16 rounded-[18px]" />
+        <div className="animate-rise">
+          <LogoMark className="size-14 rounded-[16px]" />
         </div>
         <h1
-          className="mt-7 animate-rise text-[32px] font-semibold leading-tight tracking-[-0.035em] text-balance"
+          className="mt-6 animate-rise text-[26px] font-semibold leading-tight tracking-[-0.035em] text-balance"
           style={{ animationDelay: "80ms" }}
         >
           {title}

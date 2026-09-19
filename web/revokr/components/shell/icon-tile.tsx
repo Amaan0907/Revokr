@@ -1,17 +1,14 @@
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// macOS System Settings-style icon: a white glyph on a coloured squircle, lit from the top.
+// macOS System Settings-style icon: a white glyph on a squircle, lit from the top. Grey by default;
+// the other tones are muted and only mark a status (needs approval, failed, resolved).
 const TILE = {
-  blue: "from-[#4ba3ff] to-[#0a6cff]",
-  red: "from-[#ff6b61] to-[#e5261b]",
-  orange: "from-[#ffb340] to-[#f58300]",
-  yellow: "from-[#ffe14d] to-[#f5b800]",
-  green: "from-[#5ae07c] to-[#1fb141]",
-  teal: "from-[#7fdcff] to-[#1aa8e0]",
-  purple: "from-[#d584ff] to-[#9a3ad6]",
-  indigo: "from-[#8a88ff] to-[#4b49d6]",
   gray: "from-[#8e8e93] to-[#5b5b60]",
+  red: "from-[#b96d67] to-[#8a4641]",
+  orange: "from-[#b98c62] to-[#8a6238]",
+  yellow: "from-[#b3a36a] to-[#867843]",
+  green: "from-[#7ea38a] to-[#537a60]",
 } as const;
 
 export type TileColor = keyof typeof TILE;

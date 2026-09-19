@@ -13,8 +13,8 @@ import type { SessionMode, SessionUser } from "@/lib/session";
 import { cn } from "@/lib/utils";
 
 const NAV = [
-  { href: "/dashboard", label: "Overview", icon: LayoutGrid, color: "blue" },
-  { href: "/incidents", label: "Incidents", icon: ShieldAlert, color: "red" },
+  { href: "/dashboard", label: "Overview", icon: LayoutGrid, color: "gray" },
+  { href: "/incidents", label: "Incidents", icon: ShieldAlert, color: "gray" },
 ] as const;
 
 export interface SidebarProps {
@@ -160,7 +160,7 @@ export function Sidebar({
             </div>
           </div>
           <p className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
-            <span className="size-1.5 rounded-full bg-resolved shadow-[0_0_6px_var(--resolved)]" />
+            <span className="size-1.5 rounded-full bg-resolved" />
             IAM sandbox · us-east-1
           </p>
         </div>
