@@ -117,6 +117,7 @@ func handleJob(ctx context.Context, pool *pgxpool.Pool, body string) error {
 				SecretType:   f.SecretType,
 				Fingerprint:  f.Fingerprint,
 				MaskedValue:  f.MaskedValue,
+				ResourceRef:  f.ResourceRef,
 				Severity:     eval.Severity,
 				RiskScore:    eval.Score,
 				RiskFactors:  eval.RiskFactors,

@@ -20,6 +20,7 @@ type Incident struct {
 	SecretType   string     `json:"secret_type"`
 	Fingerprint  string     `json:"fingerprint"`
 	MaskedValue  string     `json:"masked_value"`
+	ResourceRef  string     `json:"resource_ref,omitempty"`
 	IsLive       *bool      `json:"is_live,omitempty"`
 	Severity     string     `json:"severity"`
 	RiskScore    int        `json:"risk_score"`
@@ -41,10 +42,10 @@ func Create(ctx context.Context, pool *pgxpool.Pool, inc *Incident) error {
 	query := `
 		INSERT INTO incidents (
 			repository_id, commit_sha, file_path, line_number, provider,
-			secret_type, fingerprint, masked_value, is_live, severity,
+			secret_type, fingerprint, masked_value, resource_ref, is_live, severity,
 			risk_score, risk_factors, status, simulated
 		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
+			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15
 		)
 		ON CONFLICT (repository_id, fingerprint) DO UPDATE SET
 			commit_sha = EXCLUDED.commit_sha,
@@ -64,6 +65,7 @@ func Create(ctx context.Context, pool *pgxpool.Pool, inc *Incident) error {
 		inc.SecretType,
 		inc.Fingerprint,
 		inc.MaskedValue,
+		inc.ResourceRef,
 		inc.IsLive,
 		inc.Severity,
 		inc.RiskScore,
@@ -81,7 +83,7 @@ func List(ctx context.Context, pool *pgxpool.Pool, limit int) ([]Incident, error
 
 	query := `
 		SELECT id, repository_id, commit_sha, file_path, line_number, provider,
-		       secret_type, fingerprint, masked_value, is_live, severity,
+		       secret_type, fingerprint, masked_value, resource_ref, is_live, severity,
 		       risk_score, risk_factors, status, simulated, created_at, resolved_at
 		FROM incidents
 		ORDER BY created_at DESC
@@ -98,17 +100,21 @@ func List(ctx context.Context, pool *pgxpool.Pool, limit int) ([]Incident, error
 		var inc Incident
 		var factorsRaw []byte
 		var statusStr string
+		var resourceRef *string
 
 		if err := rows.Scan(
 			&inc.ID, &inc.RepositoryID, &inc.CommitSHA, &inc.FilePath, &inc.LineNumber,
-			&inc.Provider, &inc.SecretType, &inc.Fingerprint, &inc.MaskedValue, &inc.IsLive,
-			&inc.Severity, &inc.RiskScore, &factorsRaw, &statusStr, &inc.Simulated,
+			&inc.Provider, &inc.SecretType, &inc.Fingerprint, &inc.MaskedValue, &resourceRef,
+			&inc.IsLive, &inc.Severity, &inc.RiskScore, &factorsRaw, &statusStr, &inc.Simulated,
 			&inc.CreatedAt, &inc.ResolvedAt,
 		); err != nil {
 			return nil, fmt.Errorf("scan incident: %w", err)
 		}
 
 		inc.Status = Status(statusStr)
+		if resourceRef != nil {
+			inc.ResourceRef = *resourceRef
+		}
 		if len(factorsRaw) > 0 {
 			var f any
 			_ = json.Unmarshal(factorsRaw, &f)
@@ -125,7 +131,7 @@ func List(ctx context.Context, pool *pgxpool.Pool, limit int) ([]Incident, error
 func GetByID(ctx context.Context, pool *pgxpool.Pool, id string) (*Incident, error) {
 	query := `
 		SELECT id, repository_id, commit_sha, file_path, line_number, provider,
-		       secret_type, fingerprint, masked_value, is_live, severity,
+		       secret_type, fingerprint, masked_value, resource_ref, is_live, severity,
 		       risk_score, risk_factors, status, simulated, created_at, resolved_at
 		FROM incidents
 		WHERE id = $1;
@@ -134,17 +140,21 @@ func GetByID(ctx context.Context, pool *pgxpool.Pool, id string) (*Incident, err
 	var inc Incident
 	var factorsRaw []byte
 	var statusStr string
+	var resourceRef *string
 
 	if err := pool.QueryRow(ctx, query, id).Scan(
 		&inc.ID, &inc.RepositoryID, &inc.CommitSHA, &inc.FilePath, &inc.LineNumber,
-		&inc.Provider, &inc.SecretType, &inc.Fingerprint, &inc.MaskedValue, &inc.IsLive,
-		&inc.Severity, &inc.RiskScore, &factorsRaw, &statusStr, &inc.Simulated,
+		&inc.Provider, &inc.SecretType, &inc.Fingerprint, &inc.MaskedValue, &resourceRef,
+		&inc.IsLive, &inc.Severity, &inc.RiskScore, &factorsRaw, &statusStr, &inc.Simulated,
 		&inc.CreatedAt, &inc.ResolvedAt,
 	); err != nil {
 		return nil, fmt.Errorf("incident not found: %w", err)
 	}
 
 	inc.Status = Status(statusStr)
+	if resourceRef != nil {
+		inc.ResourceRef = *resourceRef
+	}
 	if len(factorsRaw) > 0 {
 		var f any
 		_ = json.Unmarshal(factorsRaw, &f)

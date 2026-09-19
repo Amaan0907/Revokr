@@ -28,7 +28,7 @@ func PerformValidation(ctx context.Context, pool *pgxpool.Pool, inc *Incident, a
 		Provider:    inc.Provider,
 		SecretType:  inc.SecretType,
 		MaskedValue: inc.MaskedValue,
-		ResourceRef: inc.Fingerprint,
+		ResourceRef: inc.ResourceRef,
 	}
 
 	result, validateErr := providers.Validate(ctx, inc.Simulated, cred)

@@ -27,6 +27,12 @@ type Finding struct {
 	SecretType  string
 	MaskedValue string
 	Fingerprint string
+	// ResourceRef is the non-secret identifier a real adapter needs to act on this
+	// credential, e.g. an AWS access key ID. It's never the sensitive half of the
+	// credential — for AWS, the secret access key is never captured here at all — so
+	// storing it in full doesn't violate the masked-value rule. Empty for providers
+	// that don't have real remediation yet (see providers.Select's v1 scope note).
+	ResourceRef string
 	LineNumber  int
 }
 
@@ -59,13 +65,17 @@ func ScanDiff(diffContent string) []Finding {
 		for _, p := range patterns {
 			matches := p.Regex.FindAllString(cleanLine, -1)
 			for _, match := range matches {
-				findings = append(findings, Finding{
+				finding := Finding{
 					Provider:    p.Provider,
 					SecretType:  p.SecretType,
 					MaskedValue: MaskSecret(match),
 					Fingerprint: GenerateFingerprint(match),
 					LineNumber:  lineIdx + 1,
-				})
+				}
+				if p.Provider == "aws" {
+					finding.ResourceRef = match
+				}
+				findings = append(findings, finding)
 			}
 		}
 	}

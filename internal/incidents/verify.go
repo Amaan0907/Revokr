@@ -19,7 +19,7 @@ func PerformVerification(ctx context.Context, pool *pgxpool.Pool, inc *Incident,
 		Provider:    inc.Provider,
 		SecretType:  inc.SecretType,
 		MaskedValue: inc.MaskedValue,
-		ResourceRef: inc.Fingerprint,
+		ResourceRef: inc.ResourceRef,
 	}
 
 	result, revokeErr := providers.Revoke(ctx, inc.Simulated, cred)

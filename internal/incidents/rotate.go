@@ -31,7 +31,7 @@ func PerformRotation(ctx context.Context, pool *pgxpool.Pool, inc *Incident, act
 		Provider:    inc.Provider,
 		SecretType:  inc.SecretType,
 		MaskedValue: inc.MaskedValue,
-		ResourceRef: inc.Fingerprint,
+		ResourceRef: inc.ResourceRef,
 	}
 
 	result, rotateErr := providers.Rotate(ctx, inc.Simulated, cred)
