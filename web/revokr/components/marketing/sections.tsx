@@ -31,24 +31,45 @@ const DETECTS: { name: string; Mark: (props: SVGProps<SVGSVGElement>) => ReactNo
   { name: "Google Cloud", Mark: GoogleCloudMark },
 ];
 
+// The strip is one long belt that slides left forever. It holds four copies of the list and moves
+// by half its length (two copies), so the frame it ends on is identical to the one it starts from
+// and the loop has no seam. Two copies are enough to fill the window and the other two are what
+// the belt slides into, so there is never a gap at the right. Only the first copy is read by
+// screen readers.
+const BELT_COPIES = 4;
+
 export function ProviderStrip() {
   return (
     <section aria-label="Supported providers" className={cn("border-b py-8", LINE)}>
       <div className="mx-auto w-[90vw]">
         <p className={MONO_LABEL}>Detects leaks from</p>
-        <ul className={cn(GRID, "mt-4 grid-cols-2 overflow-hidden rounded-2xl border sm:grid-cols-3 lg:grid-cols-6", LINE)}>
-          {DETECTS.map(({ name, Mark, markClass }) => (
-            <li
-              key={name}
-              className="flex h-36 flex-col items-center justify-center gap-1 bg-black/60 text-[15px] font-semibold tracking-[-0.02em] text-foreground"
-            >
-              <span className="grid h-14 place-items-center">
-                <Mark className={cn("size-9 shrink-0", markClass)} />
-              </span>
-              {name}
-            </li>
-          ))}
-        </ul>
+        <div
+          className={cn(
+            "group mt-4 overflow-hidden rounded-2xl border bg-black/60 mask-[linear-gradient(to_right,transparent,black_6%,black_94%,transparent)]",
+            LINE,
+          )}
+        >
+          <div className="flex w-max animate-marquee group-hover:paused">
+            {Array.from({ length: BELT_COPIES }, (_, copy) => (
+              <ul key={copy} aria-hidden={copy > 0 || undefined} className="flex shrink-0">
+                {DETECTS.map(({ name, Mark, markClass }) => (
+                  <li
+                    key={name}
+                    className={cn(
+                      "flex h-36 w-44 flex-col items-center justify-center gap-1 border-r text-[15px] font-semibold tracking-[-0.02em] text-foreground sm:w-56",
+                      LINE,
+                    )}
+                  >
+                    <span className="grid h-14 place-items-center">
+                      <Mark className={cn("size-9 shrink-0", markClass)} />
+                    </span>
+                    {name}
+                  </li>
+                ))}
+              </ul>
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   );
@@ -304,14 +325,18 @@ export function FinalCta({ signedIn }: { signedIn: boolean }) {
         href="#home"
         aria-label="Back to top"
         title="Back to top"
-        className={cn(
-          hoverButtonVariants({ variant: "outline", size: "icon" }),
-          "absolute bottom-6 right-[5vw] lg:bottom-auto lg:top-1/2 lg:-translate-y-1/2",
-        )}
+        className="group absolute bottom-6 right-[5vw] grid size-11 place-items-center overflow-hidden rounded-full border border-white/15 bg-white/[0.02] text-foreground transition-colors duration-200 ease-in-out hover:border-primary hover:bg-primary hover:text-primary-foreground focus-visible:border-primary focus-visible:bg-primary focus-visible:text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transition-none lg:bottom-auto lg:top-1/2 lg:-translate-y-1/2"
       >
-        <HoverButtonContent>
-          <ArrowUp aria-hidden className="size-[18px]" />
-        </HoverButtonContent>
+        {/* On hover the arrow leaves through the top as a second one rises in from below, and the
+            colours flip, in the same spirit as the other buttons. */}
+        <ArrowUp
+          aria-hidden
+          className="col-start-1 row-start-1 size-[18px] transition-transform duration-200 ease-in-out group-hover:-translate-y-11 group-focus-visible:-translate-y-11 motion-reduce:transition-none"
+        />
+        <ArrowUp
+          aria-hidden
+          className="col-start-1 row-start-1 size-[18px] translate-y-11 transition-transform duration-200 ease-in-out group-hover:translate-y-0 group-focus-visible:translate-y-0 motion-reduce:transition-none"
+        />
       </a>
     </section>
   );

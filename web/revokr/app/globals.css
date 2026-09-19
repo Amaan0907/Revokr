@@ -85,6 +85,17 @@
   --animate-drift-a: drift-a 26s ease-in-out infinite;
   --animate-drift-b: drift-b 32s ease-in-out infinite;
   --animate-drift-c: drift-c 38s ease-in-out infinite;
+  --animate-marquee: marquee 40s linear infinite;
+}
+
+/* Slides a belt of repeated content left by half its own length, which is one full repeat. */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
 }
 
 /* Slow wandering of the ambient light behind the glass. */
