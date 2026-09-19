@@ -184,3 +184,15 @@ func ResolveRepositoryID(ctx context.Context, pool *pgxpool.Pool, explicitID, ow
 
 	return "", fmt.Errorf("no repository found for %s/%s", owner, name)
 }
+
+// RepositoryOwnerName returns a repository's owner and name by ID — the
+// reverse of ResolveRepositoryID — for steps that need to call the GitHub
+// API directly (e.g. the GitHub Actions secret update in rotate.go) rather
+// than go through an incident's own fields.
+func RepositoryOwnerName(ctx context.Context, pool *pgxpool.Pool, repositoryID string) (owner, name string, err error) {
+	err = pool.QueryRow(ctx, "SELECT owner, name FROM repositories WHERE id = $1", repositoryID).Scan(&owner, &name)
+	if err != nil {
+		return "", "", fmt.Errorf("resolve repository owner/name for %s: %w", repositoryID, err)
+	}
+	return owner, name, nil
+}

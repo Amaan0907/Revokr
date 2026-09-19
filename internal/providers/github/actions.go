@@ -15,6 +15,15 @@ import (
 
 const apiBase = "https://api.github.com"
 
+// AWSAccessKeyIDSecretName and AWSSecretAccessKeySecretName are the fixed
+// GitHub Actions secret names an AWS credential rotation writes into. v1
+// scope is AWS-only remediation (see providers.Select's own v1 scope note),
+// so these are the only secret names defined for now.
+const (
+	AWSAccessKeyIDSecretName     = "AWS_ACCESS_KEY_ID"
+	AWSSecretAccessKeySecretName = "AWS_SECRET_ACCESS_KEY"
+)
+
 // Client talks to the GitHub Actions secrets API for one repo.
 type Client struct {
 	owner string
