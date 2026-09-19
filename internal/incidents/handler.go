@@ -18,6 +18,7 @@ func RegisterRoutes(r *gin.Engine, pool *pgxpool.Pool) {
 		api.GET("/:id", handleGetIncident(pool))
 		api.GET("/:id/audit", handleGetAuditLogs(pool))
 		api.GET("/:id/actions", handleGetActions(pool))
+		api.GET("/:id/analysis", handleGetAnalysis(pool))
 		api.POST("/:id/transition", handleTransitionIncident(pool))
 		api.POST("/:id/approve", handleApproveIncident(pool))
 		api.POST("/:id/deny", handleDenyIncident(pool))
