@@ -106,3 +106,57 @@ func VerifyKeyIsDead(ctx context.Context, region, accessKeyID, secretAccessKey s
 	}
 	return fmt.Errorf("old key %s still works after retries - it should have been rejected", accessKeyID)
 }
+
+// ValidateKeyWithRetry is ValidateKey with the same propagation-delay retry
+// CreateReplacementKey's caller needs right after creating a key: IAM can
+// take a few seconds before a brand-new key pair actually authenticates.
+func ValidateKeyWithRetry(ctx context.Context, region, accessKeyID, secretAccessKey string) error {
+	var err error
+	for attempt := 1; attempt <= 5; attempt++ {
+		if err = ValidateKey(ctx, region, accessKeyID, secretAccessKey); err == nil {
+			return nil
+		}
+		fmt.Printf("validate attempt %d failed (key propagation delay is normal), retrying in 5s: %v\n", attempt, err)
+		time.Sleep(5 * time.Second)
+	}
+	return fmt.Errorf("key %s did not validate after retries: %w", accessKeyID, err)
+}
+
+// KeyStatus reports whether accessKeyID is currently Active on targetUsername,
+// straight from IAM. Unlike ValidateKey, this uses the manager identity's own
+// credentials (the ones this Client already holds) rather than the key being
+// checked — so it works for a key whose secret half was never captured, which
+// is every leaked key detected by internal/detector (only the access key ID
+// is ever extracted, never its paired secret).
+func (c *Client) KeyStatus(ctx context.Context, targetUsername, accessKeyID string) (bool, error) {
+	out, err := c.iamClient.ListAccessKeys(ctx, &iam.ListAccessKeysInput{UserName: aws.String(targetUsername)})
+	if err != nil {
+		return false, fmt.Errorf("list access keys for %s: %w", targetUsername, err)
+	}
+	for _, key := range out.AccessKeyMetadata {
+		if aws.ToString(key.AccessKeyId) == accessKeyID {
+			return key.Status == iamtypes.StatusTypeActive, nil
+		}
+	}
+	return false, fmt.Errorf("access key %s not found on user %s", accessKeyID, targetUsername)
+}
+
+// VerifyKeyIsDeadByStatus is VerifyKeyIsDead's counterpart for a key we
+// deactivated but never held the secret for (the leaked key, disabled via
+// DeactivateOldKey): same retry shape, but checks IAM's own Status field via
+// KeyStatus instead of trying to authenticate as the key.
+func (c *Client) VerifyKeyIsDeadByStatus(ctx context.Context, targetUsername, accessKeyID string) error {
+	for attempt := 1; attempt <= 5; attempt++ {
+		active, err := c.KeyStatus(ctx, targetUsername, accessKeyID)
+		if err != nil {
+			return err
+		}
+		if !active {
+			fmt.Printf("confirmed old key %s is inactive\n", accessKeyID)
+			return nil
+		}
+		fmt.Printf("verify attempt %d: old key %s still shows active (IAM propagation delay is normal), retrying in 5s\n", attempt, accessKeyID)
+		time.Sleep(5 * time.Second)
+	}
+	return fmt.Errorf("old key %s still active after retries - it should have been deactivated", accessKeyID)
+}
