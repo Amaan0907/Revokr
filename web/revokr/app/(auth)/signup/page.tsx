@@ -23,7 +23,9 @@ export default async function SignupPage({ searchParams }: SignupPageProps) {
 
   return (
     <AuthForm
-      title="Create your Revokr account"
+      eyebrow="Get started"
+      title="Create your"
+      accent="Revokr account."
       description="Setup takes about a minute. Your repositories connect through GitHub."
       next={next}
       error={typeof params.error === "string" ? params.error : undefined}
@@ -33,23 +35,21 @@ export default async function SignupPage({ searchParams }: SignupPageProps) {
       switchPrompt="Already have an account?"
       switchHref="/login"
       switchLabel="Sign in"
-    >
-      <ol
-        className="mt-9 animate-lift divide-y divide-white/[0.06] overflow-hidden rounded-2xl bg-white/[0.04] ring-1 ring-inset ring-white/[0.07]"
-        style={{ animationDelay: "320ms" }}
-      >
-        {STEPS.map((step, i) => (
-          <li key={step.title} className="flex items-center gap-3.5 px-4 py-3.5">
-            <span className="grid size-7 shrink-0 place-items-center rounded-full bg-link/15 text-[13px] font-semibold tabular-nums text-link">
-              {i + 1}
-            </span>
-            <div>
-              <p className="text-sm font-medium">{step.title}</p>
-              <p className="mt-0.5 text-xs text-muted-foreground">{step.body}</p>
-            </div>
-          </li>
-        ))}
-      </ol>
-    </AuthForm>
+      aside={
+        <ol className="divide-y divide-white/[0.06] overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.02]">
+          {STEPS.map((step, i) => (
+            <li key={step.title} className="flex items-center gap-4 px-4 py-3.5">
+              <span className="w-5 shrink-0 font-mono text-xs tabular-nums text-muted-foreground">
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <div className="min-w-0">
+                <p className="text-[15px] font-semibold tracking-[-0.015em]">{step.title}</p>
+                <p className="text-[13px] text-muted-foreground">{step.body}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      }
+    />
   );
 }

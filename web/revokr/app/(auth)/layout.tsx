@@ -1,15 +1,20 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
-import { Ambient } from "@/components/shell/ambient";
+import { HeaderShell } from "@/components/marketing/site-header";
+import { PageGradient } from "@/components/marketing/page-gradient";
 import { Logo } from "@/components/shell/logo";
 
+// The sign-in pages open on the landing page's own frame: the same black-and-white gradient, the
+// same floating glass header, and the same 90vw column. The arc is turned down to a soft glow so
+// it stays behind the form rather than competing with it. There is no footer, because even faded
+// the arc is brightest along the bottom edge and would sit under any text placed there.
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="relative flex min-h-dvh flex-col">
-      <Ambient animated />
+    <div className="relative flex min-h-dvh flex-col overflow-x-clip">
+      <PageGradient strength={0.4} />
 
-      <header className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
+      <HeaderShell>
         <Link
           href="/"
           aria-label="Revokr home"
@@ -19,23 +24,14 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         </Link>
         <Link
           href="/"
-          className="glass-control inline-flex h-8 items-center gap-0.5 rounded-full pl-2 pr-3.5 text-[13px] text-foreground/80 transition-colors hover:bg-white/15 hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+          className="inline-flex h-8 items-center gap-0.5 rounded-full pl-2 pr-3.5 text-[13px] text-foreground/70 transition-colors hover:bg-white/[0.07] hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
         >
           <ChevronLeft aria-hidden className="size-4" />
-          Home
+          Back to home
         </Link>
-      </header>
+      </HeaderShell>
 
-      <main className="flex flex-1 items-center justify-center px-4 py-10">
-        {/* The whole form sits on one pane of glass over slowly drifting light. */}
-        <div className="surface w-full max-w-[27rem] rounded-[32px] px-6 py-9 animate-in fade-in zoom-in-95 animation-duration-700 fill-mode-both sm:px-10 sm:py-11">
-          {children}
-        </div>
-      </main>
-
-      <footer className="px-4 pb-8 text-center text-xs text-muted-foreground">
-        Copyright © {new Date().getFullYear()} Revokr. Raw secrets are never stored, logged or shown.
-      </footer>
+      <main className="mx-auto flex w-[90vw] flex-1 items-center pb-14 pt-28">{children}</main>
     </div>
   );
 }

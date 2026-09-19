@@ -286,7 +286,7 @@ export function Features() {
   );
 }
 
-export function FinalCta({ signedIn }: { signedIn: boolean }) {
+export function FinalCta() {
   return (
     <section className={cn("relative border-b", LINE)}>
       <Reveal className="mx-auto flex w-[90vw] max-w-6xl flex-col items-center py-20 text-center lg:py-28">
@@ -297,23 +297,15 @@ export function FinalCta({ signedIn }: { signedIn: boolean }) {
           Connect a repository in about a minute.
         </p>
         <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
-          {signedIn ? (
-            <Link href="/dashboard" className={hoverButtonVariants({ size: "hero" })}>
-              <HoverButtonContent>Open dashboard</HoverButtonContent>
-            </Link>
-          ) : (
-            <>
-              <Link href="/signup" className={hoverButtonVariants({ size: "hero" })}>
-                <HoverButtonContent>
-                  <GitHubMark className="size-5" />
-                  Sign up with GitHub
-                </HoverButtonContent>
-              </Link>
-              <DemoButton className={hoverButtonVariants({ variant: "outline", size: "hero" })}>
-                <HoverButtonContent>Try the demo</HoverButtonContent>
-              </DemoButton>
-            </>
-          )}
+          <Link href="/signup" className={hoverButtonVariants({ size: "hero" })}>
+            <HoverButtonContent>
+              <GitHubMark className="size-5" />
+              Sign up with GitHub
+            </HoverButtonContent>
+          </Link>
+          <DemoButton className={hoverButtonVariants({ variant: "outline", size: "hero" })}>
+            <HoverButtonContent>Try the demo</HoverButtonContent>
+          </DemoButton>
         </div>
       </Reveal>
 

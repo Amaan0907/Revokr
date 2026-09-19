@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AuthForm } from "@/components/auth/auth-form";
+import { POINTS } from "@/components/marketing/hero";
+import { IconBox } from "@/components/marketing/icon-box";
 import { isGitHubLoginEnabled, isGoogleLoginEnabled, safeNextPath } from "@/lib/auth-config";
 import { getSession } from "@/lib/session";
 
@@ -17,7 +19,9 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
   return (
     <AuthForm
-      title="Welcome back"
+      eyebrow="Sign in"
+      title="Welcome"
+      accent="back."
       description="Sign in to see what's leaked, and what's already been fixed."
       next={next}
       error={typeof params.error === "string" ? params.error : undefined}
@@ -35,6 +39,19 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
       switchPrompt="New to Revokr?"
       switchHref="/signup"
       switchLabel="Create an account"
+      aside={
+        <ul className="flex flex-col gap-4">
+          {POINTS.map((point) => (
+            <li key={point.title} className="flex items-center gap-3.5">
+              <IconBox icon={point.icon} />
+              <div className="min-w-0">
+                <p className="text-[15px] font-semibold tracking-[-0.015em]">{point.title}</p>
+                <p className="text-[13px] text-muted-foreground">{point.body}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      }
     />
   );
 }

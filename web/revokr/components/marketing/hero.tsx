@@ -12,14 +12,14 @@ import { HoverButtonContent, hoverButtonVariants } from "@/components/ui/hover-b
 const WORD = "animate-rise inline-block pb-[0.1em]";
 
 // Each point mirrors a step of the incident the replay plays.
-const POINTS: { icon: LucideIcon; title: string; body: string }[] = [
+export const POINTS: { icon: LucideIcon; title: string; body: string }[] = [
   { icon: ShieldCheck, title: "Proven live", body: "Checked with AWS before you're alerted." },
   { icon: RefreshCw, title: "Replace first", body: "The old key is revoked last." },
   { icon: MousePointerClick, title: "One click", body: "Nothing rotates until you approve." },
 ];
 
 // A short headline, one sentence and two actions, with the product on its own band just below.
-export function Hero({ signedIn }: { signedIn: boolean }) {
+export function Hero() {
   return (
     <>
       <section id="home" className="relative border-b border-white/[0.08]">
@@ -54,15 +54,9 @@ export function Hero({ signedIn }: { signedIn: boolean }) {
             className="animate-lift mt-6 flex flex-wrap items-center gap-3"
             style={{ animationDelay: "520ms" }}
           >
-            {signedIn ? (
-              <Link href="/dashboard" className={hoverButtonVariants({ size: "hero" })}>
-                <HoverButtonContent>Open dashboard</HoverButtonContent>
-              </Link>
-            ) : (
-              <Link href="/signup" className={hoverButtonVariants({ size: "hero" })}>
-                <HoverButtonContent>Get started</HoverButtonContent>
-              </Link>
-            )}
+            <Link href="/signup" className={hoverButtonVariants({ size: "hero" })}>
+              <HoverButtonContent>Get started</HoverButtonContent>
+            </Link>
           </div>
         </div>
       </section>

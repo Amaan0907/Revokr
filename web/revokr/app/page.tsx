@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { Hero } from "@/components/marketing/hero";
 import { HowItWorks } from "@/components/marketing/how-it-works";
 import { FinalCta, Features, Numbers, ProviderStrip, SiteFooter } from "@/components/marketing/sections";
@@ -7,20 +8,21 @@ import { SiteHeader } from "@/components/marketing/site-header";
 import { getSession } from "@/lib/session";
 
 export default async function LandingPage() {
-  const signedIn = (await getSession()) !== null;
+  // This page is for visitors; someone who is signed in has the dashboard as their home.
+  if (await getSession()) redirect("/dashboard");
 
   return (
     <div className="relative overflow-x-clip">
       <PageGradient />
-      <SiteHeader signedIn={signedIn} />
+      <SiteHeader />
       <main>
-        <Hero signedIn={signedIn} />
+        <Hero />
         <ProviderStrip />
         <Numbers />
         <HowItWorks />
         <Features />
         <SecuritySection />
-        <FinalCta signedIn={signedIn} />
+        <FinalCta />
       </main>
       <SiteFooter />
     </div>
