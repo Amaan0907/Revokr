@@ -12,6 +12,7 @@ import (
 	"github.com/Amaan0907/Revokr/internal/db"
 	"github.com/Amaan0907/Revokr/internal/githubapp"
 	"github.com/Amaan0907/Revokr/internal/incidents"
+	"github.com/Amaan0907/Revokr/internal/notifications"
 	"github.com/Amaan0907/Revokr/internal/queue"
 	"github.com/Amaan0907/Revokr/internal/secrets"
 )
@@ -48,6 +49,14 @@ func main() {
 	}
 	log.Printf("api: github app secrets loaded (private key len=%d bytes, webhook secret set=%t)",
 		len(githubApp.PrivateKeyPEM), githubApp.WebhookSecret != "")
+
+	// Optional: a bad or missing notification config never stops the API.
+	if settings, err := notifications.LoadSettings(ctx); err != nil {
+		log.Printf("api: notifications disabled: %v", err)
+	} else if settings != nil {
+		incidents.SetNotifier(settings.Notifier, settings.MinSeverity)
+		log.Printf("api: notifications enabled (minimum severity %s)", settings.MinSeverity)
+	}
 
 	var queueClient *queue.Client
 	if queueURL := os.Getenv("SQS_QUEUE_URL"); queueURL != "" {

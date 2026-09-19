@@ -47,5 +47,6 @@ func Transition(ctx context.Context, pool *pgxpool.Pool, incidentID string, targ
 		return fmt.Errorf("record transition audit log: %w", err)
 	}
 
+	notifyTransition(ctx, pool, incidentID, target)
 	return nil
 }
