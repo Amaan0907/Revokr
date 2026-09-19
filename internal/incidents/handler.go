@@ -6,6 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/Amaan0907/Revokr/internal/actions"
 )
 
 // RegisterRoutes registers the incident management endpoints on the Gin router.
@@ -15,7 +17,10 @@ func RegisterRoutes(r *gin.Engine, pool *pgxpool.Pool) {
 		api.GET("", handleListIncidents(pool))
 		api.GET("/:id", handleGetIncident(pool))
 		api.GET("/:id/audit", handleGetAuditLogs(pool))
+		api.GET("/:id/actions", handleGetActions(pool))
 		api.POST("/:id/transition", handleTransitionIncident(pool))
+		api.POST("/:id/approve", handleApproveIncident(pool))
+		api.POST("/:id/deny", handleDenyIncident(pool))
 	}
 }
 
@@ -80,6 +85,28 @@ func handleGetAuditLogs(pool *pgxpool.Pool) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, gin.H{"audit_logs": logs})
+	}
+}
+
+func handleGetActions(pool *pgxpool.Pool) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		id := c.Param("id")
+		if pool == nil {
+			c.JSON(http.StatusOK, gin.H{"actions": []actions.Action{}})
+			return
+		}
+
+		list, err := actions.ListByIncident(c.Request.Context(), pool, id)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		if list == nil {
+			list = []actions.Action{}
+		}
+
+		c.JSON(http.StatusOK, gin.H{"actions": list})
 	}
 }
 
@@ -152,5 +179,86 @@ func handleTransitionIncident(pool *pgxpool.Pool) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, gin.H{"status": "ok", "new_status": req.TargetStatus})
+	}
+}
+
+type approveRequest struct {
+	Actor    string `json:"actor"`
+	Metadata any    `json:"metadata"`
+}
+
+// handleApproveIncident is the approval gate's one door: nothing in this
+// codebase runs ROTATE_CREDENTIAL, UPDATE_GITHUB_SECRET or
+// DISABLE_OLD_CREDENTIAL except through here (or the equivalent
+// target_status: ROTATING call on /transition, which this wraps). A bare
+// POST with no body is fine — actor defaults to "dashboard-user".
+func handleApproveIncident(pool *pgxpool.Pool) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		id := c.Param("id")
+		if pool == nil {
+			c.JSON(http.StatusServiceUnavailable, gin.H{"error": "database not connected"})
+			return
+		}
+
+		var req approveRequest
+		_ = c.ShouldBindJSON(&req) // body is optional
+
+		actor := req.Actor
+		if actor == "" {
+			actor = "dashboard-user"
+		}
+
+		inc, err := GetByID(c.Request.Context(), pool, id)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
+
+		if err := PerformRotation(c.Request.Context(), pool, inc, actor, req.Metadata); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"status": "ok", "new_status": StatusResolved})
+	}
+}
+
+type denyRequest struct {
+	Actor  string `json:"actor"`
+	Reason string `json:"reason"`
+}
+
+// handleDenyIncident stops an incident at AWAITING_APPROVAL without ever
+// reaching a provider.Adapter — it's a plain Transition, the same one
+// /transition's generic fallback already does, just under a name that
+// doesn't require knowing the internal status/action strings to call
+// correctly.
+func handleDenyIncident(pool *pgxpool.Pool) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		id := c.Param("id")
+		if pool == nil {
+			c.JSON(http.StatusServiceUnavailable, gin.H{"error": "database not connected"})
+			return
+		}
+
+		var req denyRequest
+		_ = c.ShouldBindJSON(&req) // body is optional
+
+		actor := req.Actor
+		if actor == "" {
+			actor = "dashboard-user"
+		}
+
+		var metadata any
+		if req.Reason != "" {
+			metadata = map[string]any{"reason": req.Reason}
+		}
+
+		if err := Transition(c.Request.Context(), pool, id, StatusRequiresUserAction, actor, ActionDenied, metadata); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"status": "ok", "new_status": StatusRequiresUserAction})
 	}
 }
