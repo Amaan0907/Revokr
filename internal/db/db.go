@@ -5,23 +5,25 @@ package db
 import (
 	"context"
 	"fmt"
+	"net"
+	"net/url"
 	"os"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func Connect(ctx context.Context) (*pgxpool.Pool, error) {
-	dsn := fmt.Sprintf(
-		"postgres://%s:%s@%s:%s/%s?sslmode=%s",
-		os.Getenv("DB_USER"),
-		os.Getenv("DB_PASSWORD"),
-		os.Getenv("DB_HOST"),
-		os.Getenv("DB_PORT"),
-		os.Getenv("DB_NAME"),
-		envOr("DB_SSLMODE", "require"),
-	)
+	// Built with net/url so a password containing @ : / ? # or % is escaped
+	// instead of breaking the connection string. RDS-generated passwords do.
+	dsn := url.URL{
+		Scheme:   "postgres",
+		User:     url.UserPassword(os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD")),
+		Host:     net.JoinHostPort(os.Getenv("DB_HOST"), os.Getenv("DB_PORT")),
+		Path:     "/" + os.Getenv("DB_NAME"),
+		RawQuery: "sslmode=" + envOr("DB_SSLMODE", "require"),
+	}
 
-	pool, err := pgxpool.New(ctx, dsn)
+	pool, err := pgxpool.New(ctx, dsn.String())
 	if err != nil {
 		return nil, fmt.Errorf("connect to postgres: %w", err)
 	}
