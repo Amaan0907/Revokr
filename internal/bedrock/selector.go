@@ -9,5 +9,8 @@ package bedrock
 
 
 func NewAnalyzer() Analyzer {
-	return NewOpenAIAnalyzer()
+	return FallbackAnalyzer{
+		Primary:  NewOpenAIAnalyzer(),
+		Fallback: TemplateAnalyzer{},
+	}
 }
