@@ -7,11 +7,15 @@ import type {
   Incident,
   IncidentDetail,
   RemediationAction,
+  Repository,
+  GitHubInstallation,
 } from "./types";
 import { REMEDIATION_PLAN } from "./incident-meta";
 
 // Timestamps are relative to page load so the demo always looks recent.
 const NOW = Date.now();
+// The instant every mock timestamp is measured back from.
+export const MOCK_NOW = NOW;
 const ago = (minutes: number) => new Date(NOW - minutes * 60_000).toISOString();
 
 const REPOS = {
@@ -614,3 +618,43 @@ export const mockAuditLog: AuditLogEntry[] = details.flatMap((d) => d.auditLog);
 export function getMockIncidentDetail(id: string): IncidentDetail | undefined {
   return details.find((d) => d.incident.id === id);
 }
+
+export const mockInstallation: GitHubInstallation = {
+  installationId: 48219304,
+  installedBy: MOCK_OPERATOR,
+  organization: "acme",
+};
+
+// Stand-in for GET /api/repositories: the six repositories that have incidents, plus two that
+// Revokr can see but isn't monitoring yet.
+export const mockRepositories: Repository[] = [
+  { ...REPOS.payments, isPrivate: true, isProduction: true, enabled: true, lastPushAt: ago(12) },
+  { ...REPOS.web, isPrivate: true, isProduction: false, enabled: true, lastPushAt: ago(180) },
+  { ...REPOS.ml, isPrivate: true, isProduction: false, enabled: true, lastPushAt: ago(65) },
+  { ...REPOS.opsBot, isPrivate: true, isProduction: false, enabled: true, lastPushAt: ago(1500) },
+  { ...REPOS.infra, isPrivate: false, isProduction: true, enabled: true, lastPushAt: ago(2880) },
+  { ...REPOS.docs, isPrivate: false, isProduction: false, enabled: true, lastPushAt: ago(300) },
+  {
+    repositoryId: "7c3a9e5d-1b84-4f26-8d0a-e2b6c4f19a73",
+    repositoryOwner: "acme",
+    repositoryName: "legacy-billing",
+    isPrivate: true,
+    isProduction: true,
+    enabled: false,
+    lastPushAt: ago(12960),
+  },
+  {
+    repositoryId: "b5e1d8f2-6a07-4c93-9e4b-3f7a1c0d8e52",
+    repositoryOwner: MOCK_OPERATOR,
+    repositoryName: "scratchpad",
+    isPrivate: false,
+    isProduction: false,
+    enabled: false,
+    lastPushAt: ago(12960),
+  },
+].map(({ repositoryId, repositoryOwner, repositoryName, ...rest }) => ({
+  id: repositoryId,
+  owner: repositoryOwner,
+  name: repositoryName,
+  ...rest,
+}));

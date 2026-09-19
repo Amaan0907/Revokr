@@ -23,7 +23,10 @@ import type {
   AuditAction,
   AuditLogEntry,
   IncidentStatus,
+  Incident,
   Provider,
+  ProviderCoverage,
+  RemediationSupport,
   Severity,
 } from "./types";
 
@@ -224,3 +227,106 @@ export function auditTone(entry: AuditLogEntry): string {
   if (entry.action === "approved") return "text-progress";
   return "text-muted-foreground";
 }
+
+// The Actions secrets a rotation writes the replacement into, by provider.
+const SECRET_NAMES: Partial<Record<Provider, string[]>> = {
+  aws: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"],
+  openai: ["OPENAI_API_KEY"],
+  stripe: ["STRIPE_SECRET_KEY"],
+};
+
+export function actionsSecretNames(provider: Provider): string[] {
+  return SECRET_NAMES[provider] ?? [];
+}
+
+// Numbered steps for the providers Revokr can't rotate itself. Shown when an incident needs action.
+export function manualSteps(incident: Incident): string[] {
+  const repo = `${incident.repositoryOwner}/${incident.repositoryName}`;
+  const secrets = `Settings → Secrets and variables → Actions in ${repo}`;
+  switch (incident.provider) {
+    case "gcp":
+      return [
+        "In Google Cloud IAM, create a new key for the affected service account.",
+        `Update the secret that holds the key in ${secrets}.`,
+        `Run the deploy workflow once and confirm it succeeds, then delete the leaked key (${incident.fingerprint.slice(0, 4)}…${incident.fingerprint.slice(-2)}) in IAM.`,
+      ];
+    case "stripe":
+      return [
+        "In the Stripe dashboard, roll the leaked key. Stripe lets the old one keep working for a short window.",
+        `Update the secret that holds the key in ${secrets}.`,
+        "Confirm payments still succeed, then let the old key expire.",
+      ];
+    case "slack":
+      return [
+        "In Slack's app settings, revoke the leaked token or regenerate the webhook URL.",
+        `Update the secret that holds it in ${secrets}.`,
+        "Post a test message to confirm the integration still works.",
+      ];
+    default:
+      return [
+        `Rotate the credential with the system that issued it (${PROVIDER_LABEL[incident.provider]}).`,
+        `Update the secret that holds it in ${secrets}.`,
+        "Revoke the leaked value at its source, then mark this incident as handled.",
+      ];
+  }
+}
+
+export const REMEDIATION_SUPPORT_META: Record<RemediationSupport, { label: string; text: string }> = {
+  full: { label: "Full remediation", text: "text-resolved" },
+  conditional: { label: "Remediation if API supports", text: "text-approval" },
+  optional: { label: "Optional remediation", text: "text-approval" },
+  manual: { label: "Manual action", text: "text-unsupported" },
+};
+
+// Detection covers every provider; remediation is a separate, narrower promise.
+export const PROVIDER_COVERAGE: ProviderCoverage[] = [
+  {
+    provider: "aws",
+    name: "AWS",
+    secretTypes: "Access key ID / secret",
+    remediation: "full",
+    note: "New key created, GH secret updated, verified, old key disabled.",
+  },
+  {
+    provider: "openai",
+    name: "OpenAI",
+    secretTypes: "API key",
+    remediation: "conditional",
+    note: "Falls back to manual steps when programmatic rotation is unavailable.",
+  },
+  {
+    provider: "github",
+    name: "GitHub",
+    secretTypes: "PAT / fine-grained token",
+    remediation: "optional",
+    note: "Off by default; needs scopes you explicitly grant.",
+  },
+  {
+    provider: "gcp",
+    name: "Google Cloud",
+    secretTypes: "Service account key",
+    remediation: "manual",
+    note: "Revokr guides you; it does not rotate the key.",
+  },
+  {
+    provider: "stripe",
+    name: "Stripe",
+    secretTypes: "Secret / restricted key",
+    remediation: "manual",
+    note: "Revokr guides you; it does not rotate the key.",
+  },
+  {
+    provider: "slack",
+    name: "Slack",
+    secretTypes: "Bot / webhook token",
+    remediation: "manual",
+    note: "Revokr guides you; it does not rotate the key.",
+  },
+  {
+    provider: "generic",
+    name: "Generic",
+    secretTypes: "High-entropy string",
+    remediation: "manual",
+    note: "Reviewed by a human; no automation attempted.",
+  },
+];

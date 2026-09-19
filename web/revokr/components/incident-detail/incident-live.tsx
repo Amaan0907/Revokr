@@ -10,6 +10,7 @@ import type {
   IncidentDetail,
   IncidentStatus,
   RemediationAction,
+  Resolution,
 } from "@/lib/types";
 
 interface LiveIncident {
@@ -17,9 +18,17 @@ interface LiveIncident {
   actions: RemediationAction[];
   auditLog: AuditLogEntry[];
   running: boolean;
+  // Set once someone closes an incident Revokr didn't rotate itself.
+  resolution: Resolution | null;
   approve: () => void;
   deny: () => void;
+  // A failed step goes back to waiting, and the rotation needs approving again.
+  retry: () => void;
+  markHandled: (resolution: Resolution) => void;
 }
+
+// Statuses where Revokr has stopped and it's now up to a person.
+const HANDOFF: IncidentStatus[] = ["FAILED", "REQUIRES_USER_ACTION", "NOT_SUPPORTED"];
 
 const LiveIncidentContext = createContext<LiveIncident | null>(null);
 
@@ -54,9 +63,15 @@ export function LiveIncidentProvider({ detail, operator, children }: LiveInciden
   const [actions, setActions] = useState(detail.actions);
   const [auditLog, setAuditLog] = useState(detail.auditLog);
   const [running, setRunning] = useState(false);
+  const [resolution, setResolution] = useState<Resolution | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  // The timers below outlive the render they started in, so they read the latest steps from here.
+  const actionsRef = useRef(actions);
 
   useEffect(() => () => abortRef.current?.abort(), []);
+  useEffect(() => {
+    actionsRef.current = actions;
+  }, [actions]);
 
   const log = (
     action: AuditAction,
@@ -110,10 +125,13 @@ export function LiveIncidentProvider({ detail, operator, children }: LiveInciden
       });
 
     const adapter = `${incident.provider}-adapter`;
+    // Returns false when the step had already succeeded, as on a retry, so it isn't run or logged twice.
     const runStep = async (type: ActionType, ms: number) => {
+      if (actionsRef.current.find((row) => row.actionType === type)?.status === "SUCCEEDED") return false;
       setStep(type, "RUNNING");
       await wait(ms);
       setStep(type, "SUCCEEDED");
+      return true;
     };
 
     setRunning(true);
@@ -122,16 +140,17 @@ export function LiveIncidentProvider({ detail, operator, children }: LiveInciden
       setStatus("ROTATING");
       await wait(500);
 
-      await runStep("ROTATE_CREDENTIAL", 1400);
-      log("key_created", "success", adapter, { newKey: maskedReplacement(incident.maskedValue) });
+      if (await runStep("ROTATE_CREDENTIAL", 1400)) {
+        log("key_created", "success", adapter, { newKey: maskedReplacement(incident.maskedValue) });
+      }
 
-      await runStep("UPDATE_GITHUB_SECRET", 1200);
-      log("gh_secret_updated", "success", "github-adapter", {
-        repository: `${incident.repositoryOwner}/${incident.repositoryName}`,
-      });
+      if (await runStep("UPDATE_GITHUB_SECRET", 1200)) {
+        log("gh_secret_updated", "success", "github-adapter", {
+          repository: `${incident.repositoryOwner}/${incident.repositoryName}`,
+        });
+      }
 
-      await runStep("DISABLE_OLD_CREDENTIAL", 1200);
-      log("old_key_disabled", "success", adapter);
+      if (await runStep("DISABLE_OLD_CREDENTIAL", 1200)) log("old_key_disabled", "success", adapter);
       setStatus("VERIFYING");
       await wait(1500);
       log("verified", "success", "verifier");
@@ -152,9 +171,37 @@ export function LiveIncidentProvider({ detail, operator, children }: LiveInciden
     setStatus("REQUIRES_USER_ACTION");
   };
 
+  const retry = () => {
+    if (status !== "FAILED" || running) return;
+    setActions((rows) =>
+      rows.map((row) =>
+        row.status === "FAILED" ? { ...row, status: "PENDING", error: null, startedAt: null, completedAt: null } : row,
+      ),
+    );
+    log("auth_requested", "pending", "approval-gate");
+    setStatus("AWAITING_APPROVAL");
+  };
+
+  const markHandled = (kind: Resolution) => {
+    if (!HANDOFF.includes(status) || running) return;
+    log("resolved", "success", operator, { resolution: kind });
+    setResolution(kind);
+    setStatus("RESOLVED");
+  };
+
   return (
     <LiveIncidentContext.Provider
-      value={{ status, actions, auditLog, running, approve: () => void approve(), deny }}
+      value={{
+        status,
+        actions,
+        auditLog,
+        running,
+        resolution,
+        approve: () => void approve(),
+        deny,
+        retry,
+        markHandled,
+      }}
     >
       {children}
     </LiveIncidentContext.Provider>

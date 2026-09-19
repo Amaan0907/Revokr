@@ -513,3 +513,44 @@ html[data-smooth-scroll] {
     scroll-behavior: auto !important;
   }
 }
+
+/* The app screens (everything behind sign-in) use a flat design system: pure black, #111113 cards,
+   hairline borders, Geist Mono labels. It's scoped to .ds-root so none of it reaches the landing
+   page, which keeps the glass look above. */
+.ds-root {
+  /* The page root is 87.5%, which shrinks every rem. The design is specified in px, so inside the
+     app one spacing step (p-4, gap-2, size-6 ...) is exactly 4px. Font sizes and radii are written
+     in px for the same reason. */
+  --spacing: 4px;
+  letter-spacing: normal;
+  /* The design leaves line-height at the browser default; Tailwind's 1.5 would make every row taller. */
+  line-height: normal;
+}
+
+.ds-root *:focus-visible {
+  outline: 2px solid #f5f5f7;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.ds-root ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.ds-root ::-webkit-scrollbar-thumb {
+  background: rgb(255 255 255 / 0.12);
+  border-radius: 8px;
+}
+
+@keyframes ds-shimmer {
+  0% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 0.35;
+  }
+}

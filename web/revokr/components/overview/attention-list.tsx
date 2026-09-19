@@ -1,23 +1,13 @@
 import Link from "next/link";
-import { ChevronRight, ShieldCheck } from "lucide-react";
-import { SeverityBadge, StatusBadge } from "@/components/incidents/badges";
-import { IconTile, type TileColor } from "@/components/shell/icon-tile";
-import { buttonVariants } from "@/components/ui/button";
+import { btn, Card, MonoStatus } from "@/components/ds/primitives";
 import { timeAgo } from "@/lib/format";
 import { STATUS_META } from "@/lib/incident-meta";
 import type { Incident, IncidentStatus } from "@/lib/types";
-import { cn } from "@/lib/utils";
 
 const PRIORITY: Partial<Record<IncidentStatus, number>> = {
   AWAITING_APPROVAL: 0,
   FAILED: 1,
   REQUIRES_USER_ACTION: 2,
-};
-
-const TILE: Partial<Record<IncidentStatus, TileColor>> = {
-  AWAITING_APPROVAL: "yellow",
-  FAILED: "red",
-  REQUIRES_USER_ACTION: "orange",
 };
 
 const CTA: Partial<Record<IncidentStatus, string>> = {
@@ -32,85 +22,50 @@ export function AttentionList({ incidents }: { incidents: Incident[] }) {
   );
 
   return (
-    <section
-      aria-labelledby="attention-heading"
-      className="surface overflow-hidden rounded-3xl animate-in fade-in slide-in-from-bottom-3 animation-duration-700 fill-mode-both [animation-delay:260ms]"
-    >
-      <div className="flex items-center justify-between gap-4 px-6 pb-3 pt-6">
-        <div>
-          <h2 id="attention-heading" className="text-[17px] font-semibold tracking-[-0.015em]">
+    <Card as="section" aria-labelledby="attention-heading" className="overflow-hidden">
+      <div className="flex items-start justify-between gap-4 border-b border-white/8 px-[18px] py-4">
+        <div className="flex flex-col gap-1">
+          <h2 id="attention-heading" className="m-0 text-[14px] font-medium">
             Needs your attention
           </h2>
-          <p className="mt-0.5 text-[13px] text-muted-foreground">
-            Incidents Revokr can&apos;t finish without a person.
-          </p>
+          <span className="text-[12px] text-muted-foreground">Incidents Revokr can&apos;t finish without a person.</span>
         </div>
-        {sorted.length > 0 && (
-          <span className="grid h-6 min-w-6 place-items-center rounded-full bg-critical px-2 text-xs font-semibold tabular-nums text-white">
-            {sorted.length}
-          </span>
-        )}
+        {sorted.length > 0 && <span className="font-mono text-[11px] text-critical">{sorted.length}</span>}
       </div>
 
       {sorted.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 px-6 pb-12 pt-8 text-center">
-          <IconTile icon={ShieldCheck} color="green" size="lg" />
-          <p className="text-[15px] font-medium">Nothing needs you right now</p>
-          <p className="text-[13px] text-muted-foreground">
-            Revokr is handling every open incident on its own.
-          </p>
-        </div>
+        <p className="m-0 px-[18px] py-6 text-[12px] leading-[1.6] text-muted-foreground">
+          Nothing needs you right now. Revokr is handling every open incident on its own.
+        </p>
       ) : (
-        <ul className="pb-2">
-          {sorted.map((incident, i) => {
-            const meta = STATUS_META[incident.status];
+        <ul className="m-0 list-none p-0">
+          {sorted.map((incident) => {
             const primary = incident.status === "AWAITING_APPROVAL";
             return (
-              <li
-                key={incident.id}
-                style={{ animationDelay: `${240 + i * 70}ms` }}
-                className="relative animate-in fade-in slide-in-from-bottom-2 animation-duration-500 fill-mode-both after:absolute after:bottom-0 after:left-[4.75rem] after:right-6 after:h-px after:bg-white/[0.06] last:after:hidden"
-              >
+              <li key={incident.id} className="border-b border-white/6 last:border-b-0">
                 <Link
                   href={`/incidents/${incident.id}`}
-                  className="group flex items-center gap-4 px-6 py-4 transition-colors duration-200 hover:bg-white/[0.03] focus-visible:bg-white/[0.05] focus-visible:outline-none"
+                  className="flex flex-wrap items-center gap-x-4 gap-y-2 px-[18px] py-3 transition-colors hover:bg-white/3"
                 >
-                  <IconTile icon={meta.icon} color={TILE[incident.status] ?? "gray"} size="md" />
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                      <p className="text-[15px] font-medium">{incident.secretType}</p>
-                      <SeverityBadge severity={incident.severity} className="h-5 px-2 text-[11px]" />
-                    </div>
-                    <p className="mt-1 truncate text-[13px] text-muted-foreground">
-                      {incident.repositoryOwner}/{incident.repositoryName}
-                      {" · "}
-                      <span className="font-mono">
-                        {incident.filePath}
-                        {incident.lineNumber !== null && `:${incident.lineNumber}`}
-                      </span>
-                      {" · "}
-                      {timeAgo(incident.createdAt)}
-                    </p>
+                  <div className="flex min-w-[200px] flex-1 flex-col gap-0.5">
+                    <span className="text-[13px]">{incident.secretType}</span>
+                    <span className="truncate font-mono text-[11px] text-muted-foreground">
+                      {incident.repositoryOwner}/{incident.repositoryName} · {incident.filePath}
+                      {incident.lineNumber !== null && `:${incident.lineNumber}`} · {timeAgo(incident.createdAt)}
+                    </span>
                   </div>
-                  <StatusBadge status={incident.status} className="hidden md:inline-flex" />
-                  <span
-                    className={cn(
-                      buttonVariants({ size: "sm", variant: primary ? "default" : "secondary" }),
-                      "hidden sm:inline-flex",
-                    )}
-                  >
+                  <MonoStatus className={STATUS_META[incident.status].text}>
+                    {incident.status.replaceAll("_", " ")}
+                  </MonoStatus>
+                  <span className={btn({ variant: primary ? "primary" : "secondary", size: "sm" })}>
                     {CTA[incident.status] ?? "Open"}
                   </span>
-                  <ChevronRight
-                    aria-hidden
-                    className="size-4 shrink-0 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 sm:hidden"
-                  />
                 </Link>
               </li>
             );
           })}
         </ul>
       )}
-    </section>
+    </Card>
   );
 }

@@ -1,32 +1,17 @@
 import Image from "next/image";
 import type { SessionUser } from "@/lib/session";
-import { cn } from "@/lib/utils";
 
-export function UserAvatar({ user, className }: { user: SessionUser; className?: string }) {
-  const label = user.name ?? user.login;
-
+// A 24px circle: their photo when there is one, otherwise a plain dim disc.
+export function UserAvatar({ user }: { user: SessionUser }) {
   if (user.avatarUrl) {
-    return (
-      <Image
-        src={user.avatarUrl}
-        alt=""
-        width={32}
-        height={32}
-        className={cn("size-8 shrink-0 rounded-full ring-1 ring-white/10", className)}
-      />
-    );
+    return <Image src={user.avatarUrl} alt="" width={24} height={24} className="size-6 shrink-0 rounded-full" />;
   }
-
-  // Contacts-style monogram when there's no photo.
   return (
     <span
       aria-hidden
-      className={cn(
-        "grid size-8 shrink-0 place-items-center rounded-full bg-linear-to-b from-[#a1a1a6] to-[#636366] text-[13px] font-semibold uppercase text-white",
-        className,
-      )}
+      className="grid size-6 shrink-0 place-items-center rounded-full bg-white/10 text-[11px] font-medium uppercase"
     >
-      {label.charAt(0)}
+      {(user.name ?? user.login).charAt(0)}
     </span>
   );
 }

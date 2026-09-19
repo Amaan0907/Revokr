@@ -39,3 +39,8 @@ export function timeAgo(iso: string, now = Date.now()): string {
   const ms = now - new Date(iso).getTime();
   return ms < MINUTE ? "just now" : `${formatDuration(ms)} ago`;
 }
+
+// "2026-09-19 14:22:08Z", the exact form used in the audit log and exports.
+export function formatAuditTimestamp(iso: string): string {
+  return `${iso.slice(0, 19).replace("T", " ")}Z`;
+}

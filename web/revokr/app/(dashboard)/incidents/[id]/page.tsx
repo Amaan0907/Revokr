@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeft } from "lucide-react";
+import { ActionsTable } from "@/components/incident-detail/actions-table";
 import { ActivityTimeline } from "@/components/incident-detail/activity-timeline";
 import { AnalystPanel } from "@/components/incident-detail/analyst-panel";
-import { IncidentDetails } from "@/components/incident-detail/incident-details";
+import { HistoryWarning } from "@/components/incident-detail/history-warning";
 import { IncidentHeader } from "@/components/incident-detail/incident-header";
 import { LiveIncidentProvider } from "@/components/incident-detail/incident-live";
-import { RemediationChecklist } from "@/components/incident-detail/remediation-checklist";
+import { RemediationOrder } from "@/components/incident-detail/remediation-order";
 import { RiskBreakdown } from "@/components/incident-detail/risk-breakdown";
+import { StatusCard } from "@/components/incident-detail/status-card";
 import { getMockIncidentDetail, MOCK_OPERATOR } from "@/lib/mock-data";
 
 interface IncidentPageProps {
@@ -34,26 +34,20 @@ export default async function IncidentPage({ params }: IncidentPageProps) {
 
   return (
     <LiveIncidentProvider detail={detail} operator={MOCK_OPERATOR}>
-      <div className="flex flex-col gap-6">
-        <Link
-          href="/incidents"
-          className="-ml-1 inline-flex w-fit items-center gap-0.5 rounded-sm text-[15px] text-link transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-ring"
-        >
-          <ChevronLeft aria-hidden className="size-5" />
-          Incidents
-        </Link>
-
+      <div className="flex flex-col gap-[18px]">
         <IncidentHeader incident={incident} />
+        <StatusCard incident={incident} />
+        <RemediationOrder initialStatus={incident.status} />
+        <ActionsTable />
 
-        <div className="grid gap-6 lg:grid-cols-3">
-          <div className="flex flex-col gap-6 lg:col-span-2">
-            <RemediationChecklist incident={incident} />
+        <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+          <div className="flex flex-col gap-4">
+            <AnalystPanel analysis={detail.analysis} initialStatus={incident.status} />
             <ActivityTimeline />
           </div>
-          <div className="flex flex-col gap-6">
-            <AnalystPanel analysis={detail.analysis} initialStatus={incident.status} />
+          <div className="flex flex-col gap-4">
             <RiskBreakdown incident={incident} />
-            <IncidentDetails incident={incident} />
+            <HistoryWarning />
           </div>
         </div>
       </div>

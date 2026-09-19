@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { CircleAlert, FlaskConical, Lock } from "lucide-react";
+import { CircleAlert, Clock, FlaskConical, Lock } from "lucide-react";
 import { DemoButton } from "./demo-button";
 import { GitHubMark } from "@/components/icons/github-mark";
 import { GoogleMark } from "@/components/icons/google-mark";
@@ -14,6 +14,8 @@ interface AuthFormProps {
   description: string;
   next: string;
   error?: string;
+  // A calm heads-up rather than a failure, such as "you were signed out".
+  notice?: { title: string; body: string };
   githubEnabled: boolean;
   googleEnabled: boolean;
   // Verb for the provider buttons: "Continue" on sign-in, "Sign up" on sign-up.
@@ -58,6 +60,7 @@ export function AuthForm({
   description,
   next,
   error,
+  notice,
   githubEnabled,
   googleEnabled,
   action,
@@ -89,6 +92,19 @@ export function AuthForm({
           {description}
         </p>
       </div>
+
+      {notice && !errorMessage && (
+        <div
+          role="status"
+          className="mt-7 flex items-start gap-2.5 rounded-2xl bg-approval/10 px-4 py-3 text-sm ring-1 ring-inset ring-approval/25 animate-in fade-in zoom-in-95 duration-300"
+        >
+          <Clock aria-hidden className="mt-0.5 size-4 shrink-0 text-approval" />
+          <p>
+            <span className="font-semibold text-approval">{notice.title}</span>{" "}
+            <span className="text-foreground/80">{notice.body}</span>
+          </p>
+        </div>
+      )}
 
       {errorMessage && (
         <p

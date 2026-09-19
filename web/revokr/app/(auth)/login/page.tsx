@@ -21,6 +21,14 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
       description="Sign in to see what's leaked, and what's already been fixed."
       next={next}
       error={typeof params.error === "string" ? params.error : undefined}
+      notice={
+        params.reason === "expired"
+          ? {
+              title: "You were signed out.",
+              body: "Your session ended. Any approval you were about to give was not submitted.",
+            }
+          : undefined
+      }
       githubEnabled={isGitHubLoginEnabled()}
       googleEnabled={isGoogleLoginEnabled()}
       action="Continue"
