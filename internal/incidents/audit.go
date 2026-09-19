@@ -24,6 +24,7 @@ const (
 	ActionVerified        AuditAction = "verified"
 	ActionResolved        AuditAction = "resolved"
 	ActionFailed          AuditAction = "failed"
+	ActionNotSupported    AuditAction = "not_supported"
 )
 
 type AuditResult string

@@ -15,6 +15,7 @@ import (
 	"github.com/Amaan0907/Revokr/internal/db"
 	"github.com/Amaan0907/Revokr/internal/detector"
 	"github.com/Amaan0907/Revokr/internal/incidents"
+	"github.com/Amaan0907/Revokr/internal/notifications"
 	"github.com/Amaan0907/Revokr/internal/queue"
 	"github.com/Amaan0907/Revokr/internal/risk"
 )
@@ -36,6 +37,14 @@ func main() {
 	q, err := queue.New(ctx, os.Getenv("SQS_QUEUE_URL"))
 	if err != nil {
 		log.Fatalf("worker: queue init: %v", err)
+	}
+
+	// Optional: a bad or missing notification config never stops the worker.
+	if settings, err := notifications.LoadSettings(ctx); err != nil {
+		log.Printf("worker: notifications disabled: %v", err)
+	} else if settings != nil {
+		incidents.SetNotifier(settings.Notifier, settings.MinSeverity)
+		log.Printf("worker: notifications enabled (minimum severity %s)", settings.MinSeverity)
 	}
 
 	log.Println("worker: polling for jobs")
@@ -117,6 +126,7 @@ func handleJob(ctx context.Context, pool *pgxpool.Pool, body string) error {
 				SecretType:   f.SecretType,
 				Fingerprint:  f.Fingerprint,
 				MaskedValue:  f.MaskedValue,
+				ResourceRef:  f.ResourceRef,
 				Severity:     eval.Severity,
 				RiskScore:    eval.Score,
 				RiskFactors:  eval.RiskFactors,
