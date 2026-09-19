@@ -37,6 +37,28 @@ func TestScanDiff_NoSecrets(t *testing.T) {
 	}
 }
 
+func TestScanDiff_ResourceRefOnlyForAWS(t *testing.T) {
+	diff := `
++ export AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE
++ export GITHUB_TOKEN=ghp_123456789012345678901234567890123456
+`
+	findings := ScanDiff(diff)
+	if len(findings) != 2 {
+		t.Fatalf("expected 2 findings, got %d", len(findings))
+	}
+
+	aws, gh := findings[0], findings[1]
+	if aws.ResourceRef != "AKIAIOSFODNN7EXAMPLE" {
+		t.Errorf("aws ResourceRef = %q, want the access key id", aws.ResourceRef)
+	}
+	if aws.MaskedValue == aws.ResourceRef {
+		t.Error("MaskedValue must stay masked even though ResourceRef carries the key id")
+	}
+	if gh.ResourceRef != "" {
+		t.Errorf("github ResourceRef = %q, want empty: only AWS has real remediation", gh.ResourceRef)
+	}
+}
+
 func TestMaskSecret(t *testing.T) {
 	cases := []struct {
 		input, want string
