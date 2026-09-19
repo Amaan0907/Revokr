@@ -63,6 +63,10 @@ func PerformRotation(ctx context.Context, pool *pgxpool.Pool, inc *Incident, act
 
 	if err := updateGitHubSecret(ctx, pool, inc, actor, result.NewRef, result.NewRawValue); err != nil {
 		metadata["error"] = err.Error()
+		// The replacement key exists but its secret never reached the repo, so
+		// nobody holds it. Disable it instead of leaving a live orphan behind;
+		// the old credential is untouched.
+		metadata["replacement_disabled"] = disableReplacement(ctx, inc, result.NewRef)
 		if txErr := Transition(ctx, pool, inc.ID, StatusFailed, actor, ActionFailed, metadata); txErr != nil {
 			return fmt.Errorf("incidents: github secret update failed (%v) and recording that failure also failed: %w", err, txErr)
 		}
@@ -159,4 +163,23 @@ func updateGitHubSecret(ctx context.Context, pool *pgxpool.Pool, inc *Incident, 
 			"secrets":    []string{githubactions.AWSAccessKeyIDSecretName, githubactions.AWSSecretAccessKeySecretName},
 		},
 	})
+}
+
+// disableReplacement deactivates the freshly created replacement credential
+// when a later step fails, so a failed rotation never strands a live key that
+// no one has the secret for. It reuses the adapter's Revoke, which for AWS
+// deactivates the key by id and checks it is dead. It reports whether that
+// worked; a failure here is recorded in the audit metadata, not returned,
+// because the incident is already failing for the original reason.
+func disableReplacement(ctx context.Context, inc *Incident, newRef string) bool {
+	if newRef == "" {
+		return false
+	}
+	_, err := providers.Revoke(ctx, inc.Simulated, providers.CredentialInput{
+		Provider:    inc.Provider,
+		SecretType:  inc.SecretType,
+		MaskedValue: inc.MaskedValue,
+		ResourceRef: newRef,
+	})
+	return err == nil
 }
