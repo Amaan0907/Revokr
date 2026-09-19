@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Check } from "lucide-react";
 import { SectionHeading } from "./section-heading";
-import { buttonVariants } from "@/components/ui/button";
+import { HoverButtonContent, hoverButtonVariants } from "@/components/ui/hover-button";
 import { cn } from "@/lib/utils";
 
 type Tone = "ok" | "bad" | "warn";
@@ -77,10 +77,12 @@ export function HowItWorks() {
   const step = STEPS[active];
 
   return (
-    <section id="how-it-works" className="border-b border-white/[0.08] px-5 py-12 sm:pl-14 sm:pr-8 lg:pl-16">
-      <SectionHeading eyebrow="How it works" title="Five steps. One click from you." />
+    <section id="how-it-works" className="border-b border-white/[0.08] py-12">
+      <div className="mx-auto w-[90vw]">
+        <SectionHeading eyebrow="Workflow" title="Five steps. One click from you." />
+      </div>
 
-      <div className="mx-auto mt-10 w-full max-w-2xl rounded-3xl border border-white/10 bg-[#0b0b0c]/85 p-6 shadow-[inset_0_1px_0_rgb(255_255_255/0.06),0_30px_80px_-30px_rgb(0_0_0/0.9)] sm:p-8">
+      <div className="mx-auto mt-10 w-[90vw] max-w-2xl rounded-3xl border border-white/10 bg-[#0b0b0c]/85 p-6 shadow-[inset_0_1px_0_rgb(255_255_255/0.06),0_30px_80px_-30px_rgb(0_0_0/0.9)] sm:p-8">
         <ol className="flex items-center">
           {STEPS.map((item, i) => {
             const done = i < active;
@@ -176,9 +178,9 @@ export function HowItWorks() {
           <button
             type="button"
             onClick={() => setActive(last ? 0 : active + 1)}
-            className={cn(buttonVariants({ size: "default" }), "min-w-28")}
+            className={cn(hoverButtonVariants({ size: "default" }), "min-w-28")}
           >
-            {last ? "Start over" : "Continue"}
+            <HoverButtonContent>{last ? "Start over" : "Continue"}</HoverButtonContent>
           </button>
         </div>
       </div>

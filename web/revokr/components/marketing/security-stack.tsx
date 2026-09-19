@@ -100,7 +100,7 @@ export function SecuritySection() {
 
   return (
     <section id="security" className="border-b border-white/[0.08]">
-      <div className="px-5 sm:px-8 lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:gap-16">
+      <div className="mx-auto w-[90vw] lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:gap-16">
         <div className="py-10 lg:py-0">
           <div className="lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col lg:justify-center">
             <SectionHeading eyebrow="Security" title="Built to never keep a secret." />

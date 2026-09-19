@@ -1,9 +1,10 @@
 import type { ReactNode, SVGProps } from "react";
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
-import { FileKey, FlaskConical, Gauge, ListOrdered, ScrollText, Sparkles } from "lucide-react";
+import { ArrowUp, FileKey, FlaskConical, Gauge, ListOrdered, ScrollText, Sparkles } from "lucide-react";
 import { IconBox } from "./icon-box";
 import { Reveal } from "./reveal";
+import { RiskMeter } from "./risk-meter";
 import { SectionHeading } from "./section-heading";
 import { DemoButton } from "@/components/auth/demo-button";
 import { GitHubMark } from "@/components/icons/github-mark";
@@ -32,21 +33,23 @@ const DETECTS: { name: string; Mark: (props: SVGProps<SVGSVGElement>) => ReactNo
 
 export function ProviderStrip() {
   return (
-    <section aria-label="Supported providers" className={cn("border-b", LINE)}>
-      <p className={cn(MONO_LABEL, "px-5 pt-5 sm:px-8")}>Detects leaks from</p>
-      <ul className={cn(GRID, "mt-4 grid-cols-2 border-t sm:grid-cols-3 lg:grid-cols-6", LINE)}>
-        {DETECTS.map(({ name, Mark, markClass }) => (
-          <li
-            key={name}
-            className="flex h-36 flex-col items-center justify-center gap-1 bg-black/60 text-[15px] font-semibold tracking-[-0.02em] text-foreground/45 transition-colors duration-300 hover:text-foreground"
-          >
-            <span className="grid h-14 place-items-center">
-              <Mark className={cn("size-9 shrink-0", markClass)} />
-            </span>
-            {name}
-          </li>
-        ))}
-      </ul>
+    <section aria-label="Supported providers" className={cn("border-b py-8", LINE)}>
+      <div className="mx-auto w-[90vw]">
+        <p className={MONO_LABEL}>Detects leaks from</p>
+        <ul className={cn(GRID, "mt-4 grid-cols-2 overflow-hidden rounded-2xl border sm:grid-cols-3 lg:grid-cols-6", LINE)}>
+          {DETECTS.map(({ name, Mark, markClass }) => (
+            <li
+              key={name}
+              className="flex h-36 flex-col items-center justify-center gap-1 bg-black/60 text-[15px] font-semibold tracking-[-0.02em] text-foreground"
+            >
+              <span className="grid h-14 place-items-center">
+                <Mark className={cn("size-9 shrink-0", markClass)} />
+              </span>
+              {name}
+            </li>
+          ))}
+        </ul>
+      </div>
     </section>
   );
 }
@@ -64,8 +67,8 @@ const FACTS: { value: number; label: string }[] = [
 
 export function Numbers() {
   return (
-    <section aria-label="Revokr in numbers" className={cn("border-b", LINE)}>
-      <ul className={cn(GRID, "grid-cols-2 lg:grid-cols-4")}>
+    <section aria-label="Revokr in numbers" className={cn("border-b py-8", LINE)}>
+      <ul className={cn(GRID, "mx-auto w-[90vw] grid-cols-2 overflow-hidden rounded-2xl border lg:grid-cols-4", LINE)}>
         {FACTS.map((fact) => (
           <li key={fact.label} className={CELL}>
             <p className="text-[length:clamp(1.75rem,3vw,2.25rem)] font-semibold leading-none tracking-[-0.04em] tabular-nums text-silver">
@@ -155,12 +158,7 @@ const BENTO: BentoCard[] = [
     body: "Every leak scored 0 to 100.",
     visual: (
       <div aria-hidden className="mt-auto pt-3">
-        <p className="text-4xl font-semibold leading-none tracking-[-0.05em] tabular-nums text-silver">
-          96<span className="ml-1 text-base font-normal tracking-normal text-muted-foreground">/100</span>
-        </p>
-        <div className="mt-3 h-1.5 rounded-full bg-white/[0.08]">
-          <div className="h-full w-[96%] rounded-full bg-white/70" />
-        </div>
+        <RiskMeter score={96} />
       </div>
     ),
   },
@@ -243,11 +241,11 @@ const BENTO: BentoCard[] = [
 export function Features() {
   return (
     <section id="features" className={cn("border-b lg:flex lg:min-h-dvh lg:flex-col", LINE)}>
-      {/* From sm up, the heading and the grid share one 80vw column, centred on the screen. */}
-      <div className="mx-auto w-full px-6 pb-6 pt-12 sm:w-[80vw] sm:px-0">
-        <SectionHeading eyebrow="Features" title="Everything after the alert." />
+      {/* The heading and the grid share one 90vw column, centred on the screen. */}
+      <div className="mx-auto w-[90vw] pb-6 pt-12">
+        <SectionHeading eyebrow="Capabilities" title="Everything after the alert." />
       </div>
-      <ul className="mx-auto grid w-full gap-4 px-6 pb-12 sm:w-[80vw] sm:px-0 md:grid-cols-2 lg:flex-1 lg:grid-cols-4 lg:grid-rows-[repeat(3,minmax(14.5rem,1fr))]">
+      <ul className="mx-auto grid w-[90vw] gap-4 pb-12 md:grid-cols-2 lg:flex-1 lg:grid-cols-4 lg:grid-rows-[repeat(3,minmax(14.5rem,1fr))]">
         {BENTO.map((card, i) => (
           <li key={card.title} className={cn("min-w-0", card.className)}>
             <Reveal delay={(i % 3) * 0.08} y={20} className="h-full">
@@ -269,8 +267,8 @@ export function Features() {
 
 export function FinalCta({ signedIn }: { signedIn: boolean }) {
   return (
-    <section className={cn("border-b", LINE)}>
-      <Reveal className="mx-auto flex max-w-6xl flex-col items-center px-5 py-20 text-center sm:px-8 lg:py-28">
+    <section className={cn("relative border-b", LINE)}>
+      <Reveal className="mx-auto flex w-[90vw] max-w-6xl flex-col items-center py-20 text-center lg:py-28">
         <h2 className="text-balance text-[length:clamp(2.25rem,6vw,5rem)] font-semibold leading-[1.02] tracking-[-0.045em] text-silver">
           Ready before the next leak.
         </h2>
@@ -297,6 +295,24 @@ export function FinalCta({ signedIn }: { signedIn: boolean }) {
           )}
         </div>
       </Reveal>
+
+      {/* Beside the headline, on the page's right margin. It sits outside <Reveal /> because that
+          moves as it fades in, and a moving parent would carry the button with it. The hero carries
+          the id "home"; the page's smooth scrolling glides to it, and without that it is an
+          ordinary jump to the top. */}
+      <a
+        href="#home"
+        aria-label="Back to top"
+        title="Back to top"
+        className={cn(
+          hoverButtonVariants({ variant: "outline", size: "icon" }),
+          "absolute bottom-6 right-[5vw] lg:bottom-auto lg:top-1/2 lg:-translate-y-1/2",
+        )}
+      >
+        <HoverButtonContent>
+          <ArrowUp aria-hidden className="size-[18px]" />
+        </HoverButtonContent>
+      </a>
     </section>
   );
 }
@@ -305,8 +321,8 @@ const FOOTER_LINKS: { title: string; links: { label: string; href: string; exter
   {
     title: "Product",
     links: [
-      { label: "How it works", href: "#how-it-works" },
-      { label: "Features", href: "#features" },
+      { label: "Workflow", href: "#how-it-works" },
+      { label: "Capabilities", href: "#features" },
       { label: "Security", href: "#security" },
     ],
   },
@@ -328,56 +344,58 @@ const FOOTER_LINK =
 
 export function SiteFooter() {
   return (
-    <footer className="relative isolate overflow-hidden px-5 py-10 sm:px-8">
+    <footer className="relative isolate overflow-hidden py-10">
       {/* The page's own arc has faded by the time you reach here, so the footer draws its own,
           kept faint so the text on top stays readable. */}
       <div aria-hidden className="bg-mono-arc pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-[46rem] opacity-30" />
-      <div className="grid gap-10 sm:grid-cols-2 md:grid-cols-[1.6fr_1fr_1fr_1fr]">
-        <div>
-          <Logo />
-          <p className="mt-3 max-w-xs text-[13px] leading-relaxed text-muted-foreground">
-            Leaked secrets, rotated safely. Built on AWS for teams that ship on GitHub.
-          </p>
+      <div className="mx-auto w-[90vw]">
+        <div className="grid gap-10 sm:grid-cols-2 md:grid-cols-[1.6fr_1fr_1fr_1fr]">
+          <div>
+            <Logo />
+            <p className="mt-3 max-w-xs text-[13px] leading-relaxed text-muted-foreground">
+              Leaked secrets, rotated safely. Built on AWS for teams that ship on GitHub.
+            </p>
+          </div>
+          {FOOTER_LINKS.map((column) => (
+            <nav key={column.title} aria-label={column.title}>
+              <p className="text-xs font-semibold text-foreground">{column.title}</p>
+              <ul className="mt-3 flex flex-col gap-2.5">
+                {column.links.map((link) => (
+                  <li key={link.label}>
+                    {link.external ? (
+                      <a
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={cn(FOOTER_LINK, "inline-flex items-center gap-1.5")}
+                      >
+                        <GitHubMark className="size-3.5" />
+                        {link.label}
+                      </a>
+                    ) : link.href.startsWith("#") ? (
+                      <a href={link.href} className={FOOTER_LINK}>
+                        {link.label}
+                      </a>
+                    ) : (
+                      <Link href={link.href} className={FOOTER_LINK}>
+                        {link.label}
+                      </Link>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          ))}
         </div>
-        {FOOTER_LINKS.map((column) => (
-          <nav key={column.title} aria-label={column.title}>
-            <p className="text-xs font-semibold text-foreground">{column.title}</p>
-            <ul className="mt-3 flex flex-col gap-2.5">
-              {column.links.map((link) => (
-                <li key={link.label}>
-                  {link.external ? (
-                    <a
-                      href={link.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={cn(FOOTER_LINK, "inline-flex items-center gap-1.5")}
-                    >
-                      <GitHubMark className="size-3.5" />
-                      {link.label}
-                    </a>
-                  ) : link.href.startsWith("#") ? (
-                    <a href={link.href} className={FOOTER_LINK}>
-                      {link.label}
-                    </a>
-                  ) : (
-                    <Link href={link.href} className={FOOTER_LINK}>
-                      {link.label}
-                    </Link>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </nav>
-        ))}
-      </div>
-      <div
-        className={cn(
-          "mt-10 flex flex-col gap-2 border-t pt-6 text-xs text-muted-foreground sm:flex-row sm:justify-between",
-          LINE,
-        )}
-      >
-        <p>Copyright © {new Date().getFullYear()} Revokr. All rights reserved.</p>
-        <p>Raw secrets are never stored, logged or shown.</p>
+        <div
+          className={cn(
+            "mt-10 flex flex-col gap-2 border-t pt-6 text-xs text-muted-foreground sm:flex-row sm:justify-between",
+            LINE,
+          )}
+        >
+          <p>Copyright © {new Date().getFullYear()} Revokr. All rights reserved.</p>
+          <p>Raw secrets are never stored, logged or shown.</p>
+        </div>
       </div>
     </footer>
   );
