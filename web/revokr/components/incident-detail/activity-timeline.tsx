@@ -71,10 +71,10 @@ export function ActivityTimeline() {
                   <span className="font-mono text-[11px] text-muted-foreground">
                     <time dateTime={entry.timestamp}>{formatTime(entry.timestamp)}Z</time>
                     {" · "}
-                    {i === 0 ? "start" : `T+${formatDuration(elapsed)}`}
+                    {i === 0 ? "Start" : `T+${formatDuration(elapsed)}`}
                   </span>
                 </div>
-                <span className="font-mono text-[11px] text-muted-foreground">by {entry.actor}</span>
+                <span className="font-mono text-[11px] text-muted-foreground">By {entry.actor}</span>
                 {lines.length > 0 && (
                   <div className="mt-1 font-mono text-[11px] leading-[1.7] text-muted-foreground">
                     {lines.map((line) => (

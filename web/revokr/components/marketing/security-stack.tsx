@@ -21,9 +21,9 @@ const PROMISES: Point[] = [
     body: "Masked values and fingerprints only.",
     detail: "Only masked values and fingerprints reach the database, the logs and every notification.",
     rows: [
-      { label: "stored", value: "AKIA••••7QXM", tone: "ok" },
-      { label: "fingerprint", value: "sha256:9f2c…e41a", tone: "ok" },
-      { label: "raw value", value: "never stored", tone: "ok" },
+      { label: "Stored", value: "AKIA••••7QXM", tone: "ok" },
+      { label: "Fingerprint", value: "sha256:9f2c…e41a", tone: "ok" },
+      { label: "Raw value", value: "Never stored", tone: "ok" },
     ],
   },
   {
@@ -31,9 +31,9 @@ const PROMISES: Point[] = [
     body: "A scoped IAM identity, never an admin.",
     detail: "Rotation runs as a dedicated IAM identity capped by a permissions boundary.",
     rows: [
-      { label: "identity", value: "revokr-rotator" },
-      { label: "boundary", value: "attached", tone: "ok" },
-      { label: "admin access", value: "none", tone: "ok" },
+      { label: "Identity", value: "revokr-rotator" },
+      { label: "Boundary", value: "Attached", tone: "ok" },
+      { label: "Admin access", value: "None", tone: "ok" },
     ],
   },
   {
@@ -41,9 +41,9 @@ const PROMISES: Point[] = [
     body: "AWS Secrets Manager with KMS.",
     detail: "GitHub App keys and webhook secrets live in AWS Secrets Manager, encrypted with KMS.",
     rows: [
-      { label: "store", value: "AWS Secrets Manager" },
-      { label: "encryption", value: "KMS", tone: "ok" },
-      { label: "plaintext", value: "none on disk", tone: "ok" },
+      { label: "Store", value: "AWS Secrets Manager" },
+      { label: "Encryption", value: "KMS", tone: "ok" },
+      { label: "Plaintext", value: "None on disk", tone: "ok" },
     ],
   },
   {
@@ -51,9 +51,9 @@ const PROMISES: Point[] = [
     body: "Bedrock never sees the key.",
     detail: "Bedrock only sees a whitelisted view of each incident. The secret is dropped before the prompt is built.",
     rows: [
-      { label: "model", value: "Amazon Bedrock" },
-      { label: "sent", value: "type, provider, severity" },
-      { label: "secret", value: "removed first", tone: "ok" },
+      { label: "Model", value: "Amazon Bedrock" },
+      { label: "Sent", value: "Type, provider, severity" },
+      { label: "Secret", value: "Removed first", tone: "ok" },
     ],
   },
 ];

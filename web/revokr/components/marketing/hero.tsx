@@ -39,7 +39,7 @@ export function Hero() {
               Replaced.
             </span>{" "}
             <span className={WORD} style={{ animationDelay: "320ms" }}>
-              <RotatingWord words={["Secured.", "Revoked."]} className="text-fade" />
+              <RotatingWord words={["Secured.", "Revoked."]} className="text-key" />
             </span>
           </h1>
 
@@ -66,17 +66,18 @@ export function Hero() {
         <div className="mx-auto grid w-[90vw] items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,40rem)] lg:gap-16">
           <div>
             <SectionHeading
+              size="lg"
               eyebrow="One incident, start to finish"
               title="Fifteen seconds from leaked to dead."
               description="Watch a real AWS key go from a push to fully revoked."
             />
-            <ul className="mt-7 flex flex-col gap-4">
+            <ul className="mt-9 flex flex-col gap-5">
               {POINTS.map((point) => (
-                <li key={point.title} className="flex items-center gap-3.5">
-                  <IconBox icon={point.icon} />
+                <li key={point.title} className="flex items-center gap-4">
+                  <IconBox icon={point.icon} size="lg" />
                   <div className="min-w-0">
-                    <p className="text-[15px] font-semibold tracking-[-0.015em]">{point.title}</p>
-                    <p className="text-[13px] text-muted-foreground">{point.body}</p>
+                    <p className="text-[19px] font-semibold tracking-[-0.02em]">{point.title}</p>
+                    <p className="text-[16px] text-muted-foreground">{point.body}</p>
                   </div>
                 </li>
               ))}

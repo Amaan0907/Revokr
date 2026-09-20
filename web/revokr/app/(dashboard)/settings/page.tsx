@@ -10,9 +10,9 @@ import { getSimulationMode } from "@/lib/settings";
 export const metadata: Metadata = { title: "Settings" };
 
 const SIGNED_IN_WITH: Record<SessionMode, string> = {
-  github: "signed in with GitHub",
-  google: "signed in with Google",
-  demo: "demo session",
+  github: "Signed in with GitHub",
+  google: "Signed in with Google",
+  demo: "Demo session",
 };
 
 const DELETE_ERRORS: Record<string, string> = {

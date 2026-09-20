@@ -134,7 +134,7 @@ export function RepositoriesView({ installation, repositories, openIncidents }: 
                     title="Production repositories add +20 to an incident's risk score"
                     onClick={() => update(row.id, { isProduction: !row.isProduction })}
                     className={cn(
-                      "cursor-pointer font-mono text-[10px] font-medium uppercase tracking-[.1em] hover:underline",
+                      "cursor-pointer text-[10px] font-medium uppercase tracking-[.1em] hover:underline",
                       row.isProduction ? "text-high" : "text-muted-foreground",
                     )}
                   >

@@ -94,7 +94,7 @@ export function AuthForm({
           <span className={cn(WORD, "text-silver")} style={{ animationDelay: "80ms" }}>
             {title}
           </span>{" "}
-          <span className={cn(WORD, "text-fade")} style={{ animationDelay: "200ms" }}>
+          <span className={cn(WORD, "text-key")} style={{ animationDelay: "200ms" }}>
             {accent}
           </span>
         </h1>

@@ -5,6 +5,7 @@ import Form from "next/form";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LogOut } from "lucide-react";
+import { LogoMark } from "./logo";
 import { UserAvatar } from "./user-avatar";
 import type { SessionMode, SessionUser } from "@/lib/session";
 import { cn } from "@/lib/utils";
@@ -43,7 +44,7 @@ export function Sidebar({ user, mode, needsAttention }: SidebarProps) {
   return (
     <aside className="flex w-full shrink-0 flex-col gap-[18px] border-b border-white/8 bg-sidebar px-3.5 py-[18px] lg:w-[232px] lg:overflow-y-auto lg:border-r lg:border-b-0">
       <Link href="/dashboard" aria-label="Revokr overview" className="flex w-fit items-center gap-[9px]">
-        <span aria-hidden className="size-[22px] rounded-[7px] bg-[linear-gradient(160deg,#f5f5f7,#86868b)]" />
+        <LogoMark className="size-[22px]" />
         <span className="text-[15px] font-semibold tracking-[-.01em]">Revokr</span>
       </Link>
 

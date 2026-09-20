@@ -339,6 +339,29 @@
     @apply bg-background text-foreground;
     letter-spacing: -0.011em;
   }
+  /* Type roles: headings, body and buttons are Geist; labels, logs and code are Geist Mono (the
+     font-mono utility, plus code/kbd/samp/pre below). Buttons only inherit their parent's font, so
+     without this one inside a mono label or row would turn mono too. */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-heading);
+  }
+  button,
+  [type="button"],
+  [type="submit"],
+  [type="reset"] {
+    font-family: var(--font-sans);
+  }
+  code,
+  kbd,
+  samp,
+  pre {
+    font-family: var(--font-mono);
+  }
   ::selection {
     background: rgb(255 255 255 / 0.25);
   }
@@ -492,6 +515,20 @@
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+
+/* The logo's own colours: the coral of its rotation arrow fading to the white of its key. Used
+   sparingly on the landing and sign-in pages, for the accent word of a headline and for progress
+   lines. Nothing behind sign-in uses it, and it is never a status colour. */
+@utility text-key {
+  background-image: linear-gradient(105deg, #ff4d4d 0%, #ff6f6f 30%, #ffc4c4 65%, #ffffff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility bg-key {
+  background-image: linear-gradient(90deg, #ff4d4d 0%, #ff6f6f 30%, #ffc4c4 65%, #ffffff 100%);
 }
 
 /* Moving highlight for "working on it" text and skeletons. */

@@ -105,7 +105,7 @@ export function IncidentsView({ incidents, initialQuery }: IncidentsViewProps) {
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <span className="mr-1 font-mono text-[11px] text-muted-foreground">severity</span>
+        <span className="mr-1 font-mono text-[11px] text-muted-foreground">Severity</span>
         {SEVERITY_ORDER.map((severity) => {
           const selected = query.severities.includes(severity);
           return (
@@ -115,7 +115,7 @@ export function IncidentsView({ incidents, initialQuery }: IncidentsViewProps) {
               aria-pressed={selected}
               onClick={() => toggleSeverity(severity)}
               className={cn(
-                "flex cursor-pointer items-center gap-[7px] rounded-full border px-[13px] py-[7px] font-mono text-[10px] font-medium uppercase tracking-[.1em]",
+                "flex cursor-pointer items-center gap-[7px] rounded-full border px-[13px] py-[7px] text-[10px] font-medium uppercase tracking-[.1em]",
                 selected ? "border-white/30 bg-white/10" : "border-white/8 bg-white/4 hover:border-white/16",
                 SEVERITY_META[severity].text,
               )}

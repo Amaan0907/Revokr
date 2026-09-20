@@ -234,13 +234,13 @@ export function AuditView({ rows, now }: AuditViewProps) {
     <>
       <div className="flex flex-wrap items-center gap-2">
         <FilterSelect
-          label="actor"
+          label="Actor"
           value={filters.actor}
           onChange={(v) => setFilter("actor", v)}
           options={[{ value: ANY, label: "All" }, ...actors.map((actor) => ({ value: actor, label: actor }))]}
         />
         <FilterSelect
-          label="action"
+          label="Action"
           value={filters.action}
           onChange={(v) => setFilter("action", v)}
           options={[
@@ -249,18 +249,18 @@ export function AuditView({ rows, now }: AuditViewProps) {
           ]}
         />
         <FilterSelect
-          label="result"
+          label="Result"
           value={filters.result}
           onChange={(v) => setFilter("result", v)}
           options={[
             { value: ANY, label: "Any" },
-            { value: "success", label: "success" },
-            { value: "failure", label: "failure" },
-            { value: "pending", label: "pending" },
+            { value: "success", label: "Success" },
+            { value: "failure", label: "Failure" },
+            { value: "pending", label: "Pending" },
           ]}
         />
         <FilterSelect
-          label="range"
+          label="Range"
           value={filters.range}
           onChange={(v) => setFilter("range", v as Range)}
           options={RANGES.map((range) => ({ value: range.id, label: range.label }))}

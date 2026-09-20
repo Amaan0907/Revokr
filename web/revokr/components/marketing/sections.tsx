@@ -80,10 +80,10 @@ const COUNT_EASE = [0.33, 1, 0.68, 1] as const;
 
 // Every figure counts up from 0 to its value when it scrolls into view.
 const FACTS: { value: number; label: string }[] = [
-  { value: 6, label: "providers detected" },
-  { value: 5, label: "steps, fixed order" },
-  { value: 1, label: "click to approve" },
-  { value: 0, label: "raw secrets stored" },
+  { value: 6, label: "Providers detected" },
+  { value: 5, label: "Steps, fixed order" },
+  { value: 1, label: "Click to approve" },
+  { value: 0, label: "Raw secrets stored" },
 ];
 
 export function Numbers() {
@@ -119,10 +119,10 @@ function Terminal({ children }: { children: ReactNode }) {
 }
 
 const ROTATION: { done: boolean; step: string; note: string }[] = [
-  { done: true, step: "validate", note: "AKIA…7QXM is live" },
-  { done: true, step: "create", note: "replacement key tested" },
-  { done: true, step: "update", note: "GitHub Actions secret" },
-  { done: false, step: "disable", note: "old key, last" },
+  { done: true, step: "Validate", note: "AKIA…7QXM is live" },
+  { done: true, step: "Create", note: "Replacement key tested" },
+  { done: true, step: "Update", note: "GitHub Actions secret" },
+  { done: false, step: "Disable", note: "Old key, last" },
 ];
 
 const AUDIT = [
@@ -290,8 +290,9 @@ export function FinalCta() {
   return (
     <section className={cn("relative border-b", LINE)}>
       <Reveal className="mx-auto flex w-[90vw] max-w-6xl flex-col items-center py-20 text-center lg:py-28">
-        <h2 className="text-balance text-[length:clamp(2.25rem,6vw,5rem)] font-semibold leading-[1.02] tracking-[-0.045em] text-silver">
-          Ready before the next leak.
+        <h2 className="text-balance text-[length:clamp(2.25rem,6vw,5rem)] font-semibold leading-[1.02] tracking-[-0.045em]">
+          <span className="text-silver">Ready before the</span>{" "}
+          <span className="inline-block pb-[0.1em] text-key">next leak.</span>
         </h2>
         <p className="mt-5 text-[length:clamp(1rem,1.6vw,1.25rem)] text-muted-foreground">
           Connect a repository in about a minute.

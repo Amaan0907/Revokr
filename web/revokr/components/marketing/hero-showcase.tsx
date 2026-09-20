@@ -11,7 +11,7 @@ export function HeroShowcase() {
           aria-hidden
           className="flex h-11 items-center gap-3 border-b border-white/[0.06] bg-white/[0.03] pl-4 pr-3 text-[13px]"
         >
-          <LogoMark className="size-5 rounded-[6px]" />
+          <LogoMark className="size-5" />
           <span className="flex min-w-0 items-center gap-1.5">
             <span className="text-muted-foreground">acme</span>
             <span className="text-muted-foreground/50">/</span>

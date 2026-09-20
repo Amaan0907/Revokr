@@ -35,7 +35,10 @@ function SortHeading({
       type="button"
       onClick={() => onSort(sortKey)}
       aria-label={`Sort by ${label.toLowerCase()}`}
-      className={cn("cursor-pointer uppercase tracking-[.12em]", active ? "text-[#f5f5f7]" : "hover:text-[#f5f5f7]")}
+      className={cn(
+        "cursor-pointer font-mono uppercase tracking-[.12em]",
+        active ? "text-[#f5f5f7]" : "hover:text-[#f5f5f7]",
+      )}
     >
       {label}
       {active && <span aria-hidden> {query.direction === "desc" ? "↓" : "↑"}</span>}

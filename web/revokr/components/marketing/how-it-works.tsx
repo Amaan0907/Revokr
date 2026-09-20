@@ -19,44 +19,44 @@ const STEPS: Step[] = [
     title: "Detect",
     body: "Scans every push to GitHub the moment it lands.",
     rows: [
-      { label: "push", value: "main · 4e1a9c7" },
-      { label: "file", value: "config/.env.production:4" },
-      { label: "found", value: "AWS_ACCESS_KEY_ID=AKIA••••7QXM", tone: "bad" },
+      { label: "Push", value: "main · 4e1a9c7" },
+      { label: "File", value: "config/.env.production:4" },
+      { label: "Found", value: "AWS_ACCESS_KEY_ID=AKIA••••7QXM", tone: "bad" },
     ],
   },
   {
     title: "Validate",
     body: "Asks AWS whether the key still works, then scores the risk.",
     rows: [
-      { label: "provider", value: "AWS" },
-      { label: "status", value: "key is live", tone: "bad" },
-      { label: "risk", value: "96 / 100" },
+      { label: "Provider", value: "AWS" },
+      { label: "Status", value: "Key is live", tone: "bad" },
+      { label: "Risk", value: "96 / 100" },
     ],
   },
   {
     title: "Approve",
     body: "Nothing changes until you say so. One click starts the rotation.",
     rows: [
-      { label: "request", value: "rotate AKIA••••7QXM" },
-      { label: "order", value: "replace first, revoke last" },
-      { label: "status", value: "waiting for you", tone: "warn" },
+      { label: "Request", value: "Rotate AKIA••••7QXM" },
+      { label: "Order", value: "Replace first, revoke last" },
+      { label: "Status", value: "Waiting for you", tone: "warn" },
     ],
   },
   {
     title: "Rotate",
     body: "A replacement is created and tested, then written to GitHub Actions.",
     rows: [
-      { label: "create", value: "replacement key, tested", tone: "ok" },
-      { label: "update", value: "GitHub Actions secret", tone: "ok" },
+      { label: "Create", value: "Replacement key, tested", tone: "ok" },
+      { label: "Update", value: "GitHub Actions secret", tone: "ok" },
     ],
   },
   {
     title: "Verify",
     body: "Only then is the old key disabled and confirmed dead.",
     rows: [
-      { label: "disable", value: "old key", tone: "ok" },
-      { label: "verify", value: "old key rejected", tone: "ok" },
-      { label: "result", value: "resolved in 14.6s", tone: "ok" },
+      { label: "Disable", value: "Old key", tone: "ok" },
+      { label: "Verify", value: "Old key rejected", tone: "ok" },
+      { label: "Result", value: "Resolved in 14.6s", tone: "ok" },
     ],
   },
 ];
@@ -112,9 +112,9 @@ export function HowItWorks() {
                   )}
                 </button>
                 {i < STEPS.length - 1 && (
-                  <span aria-hidden className="relative mx-2 h-px flex-1 bg-white/10">
+                  <span aria-hidden className="relative mx-2 h-0.5 flex-1 overflow-hidden rounded-full bg-white/10">
                     <span
-                      className="absolute inset-y-0 left-0 bg-white/60 transition-[width] duration-500 ease-out"
+                      className="absolute inset-y-0 left-0 bg-key transition-[width] duration-500 ease-out"
                       style={{ width: done ? "100%" : "0%" }}
                     />
                   </span>
