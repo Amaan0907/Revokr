@@ -40,7 +40,7 @@ export default async function AuditPage() {
       <PageHeader
         eyebrow="Audit log · read-only"
         title="Every step, who did it, what happened"
-        description="Append-only. Entries cannot be edited or deleted from the product. Metadata holds fingerprints and masked values only."
+        description="Append-only. Entries cannot be edited or deleted from the product, and are removed only when the account that owns them is deleted. Metadata holds fingerprints and masked values only."
       />
       <AuditView rows={rows} now={await getNow()} />
     </div>

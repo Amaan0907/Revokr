@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { LogOut } from "lucide-react";
 import { Btn, Card, PageHeader } from "@/components/ds/primitives";
+import { DeleteAccountCard } from "@/components/settings/delete-account-card";
 import { NotificationsCard } from "@/components/settings/notifications-card";
 import { SimulationCard } from "@/components/settings/simulation-card";
 import { getSession, type SessionMode } from "@/lib/session";
@@ -14,7 +15,19 @@ const SIGNED_IN_WITH: Record<SessionMode, string> = {
   demo: "demo session",
 };
 
-export default async function SettingsPage() {
+const DELETE_ERRORS: Record<string, string> = {
+  delete_confirm: "What you typed didn't match, so nothing was deleted.",
+  delete_failed: "Your account couldn't be deleted right now, so nothing was changed. Try again in a moment.",
+  delete_demo: "The demo session has no account to delete.",
+};
+
+interface SettingsPageProps {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}
+
+export default async function SettingsPage({ searchParams }: SettingsPageProps) {
+  const { error } = await searchParams;
+  const deleteError = typeof error === "string" ? DELETE_ERRORS[error] : undefined;
   const [session, simulation] = await Promise.all([getSession(), getSimulationMode()]);
   const identity = session
     ? [
@@ -29,6 +42,12 @@ export default async function SettingsPage() {
   return (
     <div className="flex flex-col gap-5">
       <PageHeader eyebrow="Settings" title="Settings" />
+
+      {deleteError && (
+        <Card role="alert" className="border-[#b8625c]/40 p-4 text-[13px] text-[#b8625c]">
+          {deleteError}
+        </Card>
+      )}
 
       {/* Two columns on a wide screen so the cards fill the page instead of stretching into bars. */}
       <div className="grid gap-5 xl:grid-cols-2 xl:items-start">
@@ -60,9 +79,13 @@ export default async function SettingsPage() {
           <span className="text-[13px] leading-[1.65] text-muted-foreground">
             Raw secret values are never stored, never logged and never shown in this product. Revokr keeps a
             SHA-256 fingerprint and a masked value (for example AKIA••••7QXM) so you can identify the credential
-            without exposing it. Detection metadata and audit entries are retained; secret material is not.
+            without exposing it. Detection metadata and audit entries are retained until you delete your account; secret material never is.
           </span>
         </Card>
+
+        {session && session.mode !== "demo" && (
+          <DeleteAccountCard login={session.user.login} mode={session.mode} />
+        )}
       </div>
     </div>
   );

@@ -97,6 +97,11 @@ func main() {
 		installations = &githubapp.PGStore{Pool: pool}
 	}
 	githubapp.RegisterWebhook(r, githubApp.WebhookSecret, queueClient, installations)
+	var accounts githubapp.AccountStore
+	if pool != nil {
+		accounts = &githubapp.PGStore{Pool: pool}
+	}
+	githubapp.RegisterAccountRoutes(r, accounts)
 	incidents.RegisterRoutes(r, pool)
 	githubapp.RegisterRepositoryRoutes(r, pool)
 

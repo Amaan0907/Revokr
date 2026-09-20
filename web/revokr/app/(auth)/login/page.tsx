@@ -31,7 +31,12 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               title: "You were signed out.",
               body: "Your session ended. Any approval you were about to give was not submitted.",
             }
-          : undefined
+          : params.reason === "deleted"
+            ? {
+                title: "Your account was deleted.",
+                body: "Your Revokr data was removed. To stop GitHub sending pushes to Revokr, uninstall the app at github.com/settings/installations.",
+              }
+            : undefined
       }
       githubEnabled={isGitHubLoginEnabled()}
       googleEnabled={isGoogleLoginEnabled()}
