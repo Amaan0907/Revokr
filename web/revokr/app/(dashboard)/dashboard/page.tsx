@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { PageHeader } from "@/components/ds/primitives";
+import { PageHeader, ScrollPane } from "@/components/ds/primitives";
 import { FirstRunOverview } from "@/components/onboarding/first-run-overview";
 import { ActivityFeed, type ActivityItem } from "@/components/overview/activity-feed";
 import { AttentionList } from "@/components/overview/attention-list";
@@ -43,7 +43,7 @@ export default async function OverviewPage() {
     });
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-5 lg:flex-1">
       <PageHeader
         eyebrow={`Overview${firstName ? ` · welcome back, ${firstName}` : ""}`}
         title="Where every leaked secret stands"
@@ -89,12 +89,17 @@ export default async function OverviewPage() {
 
           <RemediationPipeline incidents={incidents} />
 
-          <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-            <AttentionList incidents={needsAttention} />
-            <div className="flex flex-col gap-4">
+          {/* On desktop this row takes the rest of the screen and each column scrolls by itself, so
+              the short attention list stays put while the long right column scrolls. It never gets
+              shorter than the minimum, so on a small screen the page scrolls to reach it. */}
+          <div className="grid gap-4 lg:min-h-[360px] lg:flex-1 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+            <ScrollPane>
+              <AttentionList incidents={needsAttention} />
+            </ScrollPane>
+            <ScrollPane className="flex flex-col gap-4">
               <SeverityBreakdown incidents={open} />
               <ActivityFeed items={recentActivity} />
-            </div>
+            </ScrollPane>
           </div>
         </>
       )}

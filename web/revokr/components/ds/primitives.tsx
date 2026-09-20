@@ -86,6 +86,20 @@ export function CardHeader({
   );
 }
 
+// One side of a two-column row. On desktop it fills the row's height and scrolls on its own, so a
+// short column stays put beside a long one instead of scrolling away and leaving a blank gap. The
+// content sits in an absolutely positioned layer, which keeps it out of the row's sizing: the row
+// takes whatever height its parent gives it, and the content scrolls inside that. Below `lg` the
+// columns just stack and the page scrolls. The layer reaches 4px past the column and pads it back
+// in, so focus rings at the column's edge aren't clipped by the scroller.
+export function ScrollPane({ className, children }: { className?: string; children: ReactNode }) {
+  return (
+    <div className="lg:relative">
+      <div className={cn("lg:absolute lg:-inset-1 lg:overflow-y-auto lg:p-1", className)}>{children}</div>
+    </div>
+  );
+}
+
 const BUTTON_VARIANT = {
   primary: "border-transparent bg-[#f5f5f7] text-black hover:bg-white",
   secondary: "border-white/12 bg-white/6 text-[#f5f5f7] hover:bg-white/10",
