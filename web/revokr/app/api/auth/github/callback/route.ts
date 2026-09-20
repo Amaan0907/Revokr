@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { githubOAuthConfig, OAUTH_STATE_COOKIE, safeNextPath } from "@/lib/auth-config";
+import { githubOAuthConfig, OAUTH_STATE_COOKIE, safeNextPath, siteOrigin } from "@/lib/auth-config";
 import { encodeSession, SESSION_COOKIE, sessionCookieOptions } from "@/lib/session";
 
 interface GitHubUser {
@@ -11,7 +11,7 @@ interface GitHubUser {
 }
 
 function fail(request: NextRequest, error: string) {
-  const response = NextResponse.redirect(new URL(`/login?error=${error}`, request.url));
+  const response = NextResponse.redirect(new URL(`/login?error=${error}`, siteOrigin(request)));
   response.cookies.delete({ name: OAUTH_STATE_COOKIE, path: "/api/auth" });
   return response;
 }
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
       client_id: config.clientId,
       client_secret: config.clientSecret,
       code,
-      redirect_uri: new URL("/api/auth/github/callback", request.nextUrl.origin).toString(),
+      redirect_uri: new URL("/api/auth/github/callback", siteOrigin(request)).toString(),
     }),
     cache: "no-store",
   });
@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
     token.access_token,
   );
 
-  const response = NextResponse.redirect(new URL(safeNextPath(stored.next), request.url));
+  const response = NextResponse.redirect(new URL(safeNextPath(stored.next), siteOrigin(request)));
   response.cookies.set(SESSION_COOKIE, session.value, sessionCookieOptions(session.maxAge));
   response.cookies.delete({ name: OAUTH_STATE_COOKIE, path: "/api/auth" });
   return response;

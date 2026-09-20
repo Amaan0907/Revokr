@@ -1,11 +1,11 @@
 import { randomBytes } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
-import { githubOAuthConfig, OAUTH_STATE_COOKIE, safeNextPath } from "@/lib/auth-config";
+import { githubOAuthConfig, OAUTH_STATE_COOKIE, safeNextPath, siteOrigin } from "@/lib/auth-config";
 
 export async function GET(request: NextRequest) {
   const config = githubOAuthConfig();
   if (!config) {
-    return NextResponse.redirect(new URL("/login?error=github_not_configured", request.url));
+    return NextResponse.redirect(new URL("/login?error=github_not_configured", siteOrigin(request)));
   }
 
   const state = randomBytes(16).toString("hex");
@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
   authorize.searchParams.set("client_id", config.clientId);
   authorize.searchParams.set(
     "redirect_uri",
-    new URL("/api/auth/github/callback", request.nextUrl.origin).toString(),
+    new URL("/api/auth/github/callback", siteOrigin(request)).toString(),
   );
   authorize.searchParams.set("state", state);
 
