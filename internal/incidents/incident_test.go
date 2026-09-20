@@ -1,6 +1,7 @@
 package incidents
 
 import (
+	"bytes"
 	"encoding/json"
 	"testing"
 )
@@ -44,5 +45,25 @@ func TestIncidentJSON(t *testing.T) {
 	}
 	if decoded.Severity != "CRITICAL" {
 		t.Errorf("expected severity CRITICAL, got %s", decoded.Severity)
+	}
+}
+
+func TestIncidentJSONOmitsResourceRef(t *testing.T) {
+	inc := Incident{
+		Provider:    "aws",
+		MaskedValue: "AKIA••••••••MPLE",
+		ResourceRef: "AKIAIOSFODNN7EXAMPLE",
+	}
+
+	data, err := json.Marshal(inc)
+	if err != nil {
+		t.Fatalf("marshal error: %v", err)
+	}
+
+	if bytes.Contains(data, []byte("resource_ref")) {
+		t.Errorf("marshalled incident should not contain resource_ref, got %s", data)
+	}
+	if bytes.Contains(data, []byte(inc.ResourceRef)) {
+		t.Errorf("marshalled incident leaks the resource ref value, got %s", data)
 	}
 }

@@ -10,6 +10,10 @@ import (
 )
 
 // Incident mirrors a row in the PostgreSQL incidents table.
+//
+// ResourceRef (for AWS, the full access key id) is what remediation acts on. It
+// is stored in the DB and read by the rotation steps, but is tagged json:"-" so
+// it never appears in API responses.
 type Incident struct {
 	ID           string `json:"id"`
 	RepositoryID string `json:"repository_id"`
@@ -24,7 +28,7 @@ type Incident struct {
 	SecretType      string     `json:"secret_type"`
 	Fingerprint     string     `json:"fingerprint"`
 	MaskedValue     string     `json:"masked_value"`
-	ResourceRef     string     `json:"resource_ref,omitempty"`
+	ResourceRef     string     `json:"-"`
 	IsLive          *bool      `json:"is_live,omitempty"`
 	Severity        string     `json:"severity"`
 	RiskScore       int        `json:"risk_score"`
