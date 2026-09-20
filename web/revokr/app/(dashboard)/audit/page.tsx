@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
 import { AuditView, type AuditRow } from "@/components/audit/audit-view";
 import { PageHeader } from "@/components/ds/primitives";
-import { MOCK_NOW, mockAuditLog, mockIncidents } from "@/lib/mock-data";
+import { getAuditFeed, getIncidents, getNow } from "@/lib/data";
 
 export const metadata: Metadata = { title: "Audit log" };
 
-export default function AuditPage() {
-  const incidents = new Map(mockIncidents.map((incident) => [incident.id, incident]));
+export default async function AuditPage() {
+  const [incidentList, auditLog] = await Promise.all([getIncidents(), getAuditFeed()]);
+  const incidents = new Map(incidentList.map((incident) => [incident.id, incident]));
 
-  const rows = [...mockAuditLog]
+  const rows = [...auditLog]
     .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
     .flatMap((entry): AuditRow[] => {
       const incident = incidents.get(entry.incidentId);
@@ -41,7 +42,7 @@ export default function AuditPage() {
         title="Every step, who did it, what happened"
         description="Append-only. Entries cannot be edited or deleted from the product. Metadata holds fingerprints and masked values only."
       />
-      <AuditView rows={rows} now={MOCK_NOW} />
+      <AuditView rows={rows} now={getNow()} />
     </div>
   );
 }
