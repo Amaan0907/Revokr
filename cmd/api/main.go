@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 
+	"github.com/Amaan0907/Revokr/internal/apiauth"
 	"github.com/Amaan0907/Revokr/internal/db"
 	"github.com/Amaan0907/Revokr/internal/githubapp"
 	"github.com/Amaan0907/Revokr/internal/incidents"
@@ -69,6 +70,18 @@ func main() {
 	}
 
 	r := gin.Default()
+
+	// Must come before the routes: gin only applies middleware to routes
+	// registered after it. Unset means open, which is what local development
+	// wants, so say which mode this is; a misspelled variable name on ECS would
+	// otherwise leave the API open with no sign of it.
+	apiKey := os.Getenv("REVOKR_API_KEY")
+	if apiKey != "" {
+		log.Println("api: /api/* requires the X-Revokr-Key header")
+	} else {
+		log.Println("api: REVOKR_API_KEY is not set, /api/* is open")
+	}
+	r.Use(apiauth.Require(apiKey))
 
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
