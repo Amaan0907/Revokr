@@ -11,7 +11,7 @@ import { RiskBreakdown } from "@/components/incident-detail/risk-breakdown";
 import { StatusCard } from "@/components/incident-detail/status-card";
 import { getIncidentDetail } from "@/lib/data";
 import { MOCK_OPERATOR } from "@/lib/mock-data";
-import { showsLiveData } from "@/lib/live-data";
+import { getDataSource } from "@/lib/live-data";
 import { getSession } from "@/lib/session";
 
 interface IncidentPageProps {
@@ -34,7 +34,7 @@ export default async function IncidentPage({ params }: IncidentPageProps) {
   if (!detail) notFound();
 
   const { incident } = detail;
-  const source = (await showsLiveData()) ? "api" : "sample";
+  const source = (await getDataSource()) === "live" ? "api" : "sample";
   const session = await getSession();
 
   return (

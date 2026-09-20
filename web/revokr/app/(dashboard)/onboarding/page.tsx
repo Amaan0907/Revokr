@@ -3,6 +3,7 @@ import { btn, Card, Eyebrow, PageHeader } from "@/components/ds/primitives";
 import { SetupChecklist } from "@/components/onboarding/setup-checklist";
 import { StateCard } from "@/components/states/state-card";
 import { GITHUB_APP_INSTALL_URL } from "@/lib/github-app";
+import { getDataSource } from "@/lib/live-data";
 import { mockInstallation, mockRepositories } from "@/lib/mock-data";
 
 export const metadata: Metadata = { title: "Getting started" };
@@ -16,8 +17,11 @@ interface OnboardingPageProps {
 // an installation, this same page says so instead of pretending it worked.
 export default async function OnboardingPage({ searchParams }: OnboardingPageProps) {
   const failed = Boolean((await searchParams).error);
-  const installation = mockInstallation;
-  const monitored = mockRepositories.filter((repository) => repository.enabled).length;
+  // Only the sample data has an installation to show. A real sign-in isn't told it is connected
+  // on the strength of made-up values.
+  const sample = (await getDataSource()) === "sample";
+  const installation = sample ? mockInstallation : null;
+  const monitored = sample ? mockRepositories.filter((repository) => repository.enabled).length : 0;
 
   if (failed) {
     return (
@@ -43,22 +47,24 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
 
   return (
     <div className="flex flex-col gap-5">
-      <PageHeader eyebrow="First run" title="Revokr is connected" />
+      <PageHeader eyebrow="First run" title={installation ? "Revokr is connected" : "Connect Revokr to GitHub"} />
 
-      <Card className="flex flex-wrap items-center gap-3.5 p-[18px]">
-        <span
-          aria-hidden
-          className="flex size-[26px] items-center justify-center rounded-full border border-resolved/50 font-mono text-[13px] text-resolved"
-        >
-          ✓
-        </span>
-        <div className="flex min-w-[200px] flex-1 flex-col gap-1">
-          <span className="text-[14px] font-medium">GitHub App installed on {installation.organization}</span>
-          <span className="font-mono text-[11px] text-muted-foreground">
-            installation_id {installation.installationId} · @{installation.installedBy} · webhook receiving pushes
+      {installation && (
+        <Card className="flex flex-wrap items-center gap-3.5 p-[18px]">
+          <span
+            aria-hidden
+            className="flex size-[26px] items-center justify-center rounded-full border border-resolved/50 font-mono text-[13px] text-resolved"
+          >
+            ✓
           </span>
-        </div>
-      </Card>
+          <div className="flex min-w-[200px] flex-1 flex-col gap-1">
+            <span className="text-[14px] font-medium">GitHub App installed on {installation.organization}</span>
+            <span className="font-mono text-[11px] text-muted-foreground">
+              installation_id {installation.installationId} · @{installation.installedBy} · webhook receiving pushes
+            </span>
+          </div>
+        </Card>
+      )}
 
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
         <SetupChecklist installation={installation} monitored={monitored} />

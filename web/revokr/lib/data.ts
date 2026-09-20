@@ -15,7 +15,7 @@ import {
   type AuditLogsResponse,
   type IncidentsResponse,
 } from "./incident-api";
-import { showsLiveData } from "./live-data";
+import { getDataSource } from "./live-data";
 import {
   getMockIncidentDetail,
   MOCK_NOW,
@@ -37,14 +37,18 @@ const PAGE_LIMIT = 100;
 
 // Cached per request, so the layout and the page share one API call.
 export const getIncidents = cache(async (): Promise<Incident[]> => {
-  if (!(await showsLiveData())) return mockIncidents;
+  const source = await getDataSource();
+  if (source === "sample") return mockIncidents;
+  if (source === "empty") return [];
   const { incidents } = await apiFetch<IncidentsResponse>(`/api/incidents?limit=${PAGE_LIMIT}`);
   return incidents.map(toIncident);
 });
 
 // Newest first, across every incident.
 export const getAuditFeed = cache(async (): Promise<AuditLogEntry[]> => {
-  if (!(await showsLiveData())) return mockAuditLog;
+  const source = await getDataSource();
+  if (source === "sample") return mockAuditLog;
+  if (source === "empty") return [];
   const { audit_logs } = await apiFetch<AuditLogsResponse>(`/api/audit?limit=${PAGE_LIMIT}`);
   return audit_logs.map(toAuditEntry);
 });
@@ -89,7 +93,9 @@ async function getAnalysis(id: string) {
 
 // Cached per request so the page and its metadata share one call, and one analysis request.
 export const getIncidentDetail = cache(async (id: string): Promise<IncidentDetail | undefined> => {
-  if (!(await showsLiveData())) return getMockIncidentDetail(id);
+  const source = await getDataSource();
+  if (source === "sample") return getMockIncidentDetail(id);
+  if (source === "empty") return undefined;
   const progress = await getIncidentProgress(id);
   if (!progress) return undefined;
   return { ...progress, analysis: await getAnalysis(id) };
@@ -102,7 +108,7 @@ export async function getSetupContext(): Promise<{
   monitored: number;
   lastPushAt: string | null;
 }> {
-  if (await showsLiveData()) return { installation: null, monitored: 0, lastPushAt: null };
+  if ((await getDataSource()) !== "sample") return { installation: null, monitored: 0, lastPushAt: null };
 
   const monitored = mockRepositories.filter((repository) => repository.enabled);
   const lastPushAt =
@@ -116,5 +122,5 @@ export async function getSetupContext(): Promise<{
 
 // The instant "how long ago" is measured from: the sample data's own clock, or the real one.
 export async function getNow(): Promise<number> {
-  return (await showsLiveData()) ? Date.now() : MOCK_NOW;
+  return (await getDataSource()) === "sample" ? MOCK_NOW : Date.now();
 }
