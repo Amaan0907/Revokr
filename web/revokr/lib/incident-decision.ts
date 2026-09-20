@@ -6,6 +6,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { DECISION_TIMEOUT_MS, ApiError, apiConfigured, apiFetch } from "./api";
 import { isSameOrigin } from "./auth-config";
 import type { ApiIncident } from "./incident-api";
+import { canViewLiveData } from "./live-data";
 import { getSession } from "./session";
 
 export type Decision = "approve" | "deny";
@@ -31,6 +32,7 @@ export async function forwardDecision(request: NextRequest, id: string, decision
   if (!session) return refuse(401, "Sign in to approve or deny a rotation.");
 
   if (!apiConfigured()) return refuse(503, "The dashboard isn't connected to a Revokr API.");
+  if (!canViewLiveData(session)) return refuse(403, "This account can't act on live incidents.");
 
   const path = `/api/incidents/${encodeURIComponent(id)}`;
 

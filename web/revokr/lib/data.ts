@@ -3,7 +3,7 @@
 // backend. The two never mix: when the URL is set and the API fails these functions throw (an
 // ApiError, shown by (dashboard)/error.tsx), because fake incidents must not pass for real ones.
 import { cache } from "react";
-import { ANALYSIS_TIMEOUT_MS, ApiError, apiConfigured, apiFetch } from "./api";
+import { ANALYSIS_TIMEOUT_MS, ApiError, apiFetch } from "./api";
 import {
   toAction,
   toAnalysis,
@@ -15,6 +15,7 @@ import {
   type AuditLogsResponse,
   type IncidentsResponse,
 } from "./incident-api";
+import { showsLiveData } from "./live-data";
 import {
   getMockIncidentDetail,
   MOCK_NOW,
@@ -36,14 +37,14 @@ const PAGE_LIMIT = 100;
 
 // Cached per request, so the layout and the page share one API call.
 export const getIncidents = cache(async (): Promise<Incident[]> => {
-  if (!apiConfigured()) return mockIncidents;
+  if (!(await showsLiveData())) return mockIncidents;
   const { incidents } = await apiFetch<IncidentsResponse>(`/api/incidents?limit=${PAGE_LIMIT}`);
   return incidents.map(toIncident);
 });
 
 // Newest first, across every incident.
 export const getAuditFeed = cache(async (): Promise<AuditLogEntry[]> => {
-  if (!apiConfigured()) return mockAuditLog;
+  if (!(await showsLiveData())) return mockAuditLog;
   const { audit_logs } = await apiFetch<AuditLogsResponse>(`/api/audit?limit=${PAGE_LIMIT}`);
   return audit_logs.map(toAuditEntry);
 });
@@ -88,20 +89,20 @@ async function getAnalysis(id: string) {
 
 // Cached per request so the page and its metadata share one call, and one analysis request.
 export const getIncidentDetail = cache(async (id: string): Promise<IncidentDetail | undefined> => {
-  if (!apiConfigured()) return getMockIncidentDetail(id);
+  if (!(await showsLiveData())) return getMockIncidentDetail(id);
   const progress = await getIncidentProgress(id);
   if (!progress) return undefined;
   return { ...progress, analysis: await getAnalysis(id) };
 });
 
 // What the empty states need to know about setup. Repositories and the GitHub installation have no
-// API endpoint yet, so with a backend configured this reports nothing rather than sample values.
-export function getSetupContext(): {
+// API endpoint yet, so a viewer of real data gets nothing here rather than sample values.
+export async function getSetupContext(): Promise<{
   installation: GitHubInstallation | null;
   monitored: number;
   lastPushAt: string | null;
-} {
-  if (apiConfigured()) return { installation: null, monitored: 0, lastPushAt: null };
+}> {
+  if (await showsLiveData()) return { installation: null, monitored: 0, lastPushAt: null };
 
   const monitored = mockRepositories.filter((repository) => repository.enabled);
   const lastPushAt =
@@ -114,6 +115,6 @@ export function getSetupContext(): {
 }
 
 // The instant "how long ago" is measured from: the sample data's own clock, or the real one.
-export function getNow(): number {
-  return apiConfigured() ? Date.now() : MOCK_NOW;
+export async function getNow(): Promise<number> {
+  return (await showsLiveData()) ? Date.now() : MOCK_NOW;
 }

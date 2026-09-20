@@ -88,7 +88,9 @@ crash between them could leave a status change without its audit row.
 **Detect and validate (worker).**
 1. The webhook handler verifies `X-Hub-Signature-256` with a constant-time HMAC compare, parses
    the push payload and enqueues a `DetectionJob`.
-2. The worker scans `diff_content` ([detector.go](internal/detector/detector.go)). For each match
+2. The worker scans the commit's added lines ([detector.go](internal/detector/detector.go)): the
+   webhook's `diff_content` when present (the synthetic path), otherwise the head commit's added
+   lines fetched from the GitHub API ([diff.go](internal/providers/github/diff.go)). For each match
    it stores a **masked value** (first 4 and last 4 characters) and a **SHA-256 fingerprint**.
    Incidents are unique per `(repository_id, fingerprint)`.
 3. The worker looks up the repository row by owner and name. The lookup never creates one, and
@@ -241,7 +243,7 @@ Listed so a reader does not have to discover them.
 
 | Item | Reality | Effect |
 |---|---|---|
-| **Real pushes are not scanned** | The worker only scans a `diff_content` field, which GitHub's push payload never contains, and nothing fetches the commit diff. | The pipeline runs from a signed synthetic webhook; a real `git push` currently produces no incident. |
+| **Real-push scanning is untested live** | The worker now fetches the commit diff itself when the webhook carries none. Only the head commit of a push is scanned, so earlier commits in the same push are missed, and a private repository needs `GITHUB_TOKEN` to be able to read it. The end-to-end run on the deployed stack used a synthetic webhook. | Until a real push has been run through the deployed stack, treat this path as unproven. |
 | **Detection is not Gitleaks** | The plan called for Gitleaks; the code uses 5 hand-written regexes. | Narrower coverage (no Google Cloud, no generic-entropy rules). |
 | **AI analyst is not on Bedrock** | The analyst calls OpenAI and falls back to a template. The `bedrock` package name is historical. | The AI step is the one piece of the system not running on AWS. In the deployed tasks the OpenAI key was not wired as of the last notes, so the template is what runs there. |
 | **No KMS use in code** | `KMS_KEY_ID` is reserved in the config template but nothing reads it. | Encryption at rest is whatever RDS and Secrets Manager provide by default; we make no further claim. |
@@ -249,7 +251,7 @@ Listed so a reader does not have to discover them.
 | **A failed validation leaves an orphan key** | If the replacement key is created but fails validation, nothing disables it. AWS allows at most two access keys per IAM user. | The user then holds two keys, so a retry would fail until one is removed by hand. |
 | **Simulation switch is cosmetic** | The Settings toggle sets a cookie that controls the banner and labels. Real versus simulated is decided per incident by the webhook's `simulated` flag. | Once the switch has been used, the banner and the switch's own text follow the cookie, not the data (until then they follow whether any incident is simulated). So it can say "Off — actions affect real credentials" while the incident being approved is simulated, or the reverse. |
 | **Installs are recorded from webhooks, untested against a real database** | `ResolveRepositoryID` no longer falls back to another repository: an unregistered repo stores no incident. Repositories are registered by the `installation` and `installation_repositories` webhook events ([installations.go](internal/githubapp/installations.go)); the install callback itself only logs. Parsing is unit-tested, the SQL is not run against PostgreSQL in any test. The `github_repo_id` column is a UUID, so it gets a generated value instead of GitHub's numeric id. | Registration depends on the App's webhook being active and pointing at the API. Uninstalling switches repositories off, not delete them, because incidents reference them. The `enabled` flag is stored but the worker does not check it. |
-| **Demo sign-in can read incident data** | The demo session is open to anyone and the incident pages do not restrict reads by session mode. | With the dashboard connected to a real API, an anonymous visitor can view incident metadata (repository, commit, file, masked value). They cannot approve real incidents. |
+| **Live incident data is open to every signed-in account unless `ADMIN_LOGINS` is set** | The dashboard reads the API with one shared key and the API does not filter by user. `ADMIN_LOGINS` (comma-separated GitHub logins or Google emails, [live-data.ts](web/revokr/lib/live-data.ts)) limits real data, and approve/deny, to those accounts; everyone else, and the demo sign-in, sees sample data. Unset, every signed-in account, demo included, sees real incident metadata (repository, commit, file, masked value). | The check is in the dashboard server only. Anyone holding the API key or the API address's open routes still reads everything. The demo session cannot approve real incidents. |
 | **GitHub secret update is unverified and uses a PAT** | `GetSecretMeta` exists but is not called after the write; auth is a personal token, not an installation token. | The step is trusted rather than confirmed; not per-installation. |
 | **Risk inputs partly fixed** | The worker passes `IsDefaultBranch = true` and `CommitTime = now`, and never sets `IsProduction` or `MultiCommitLeak` (and the schema has no production flag). | Every finding gets the default-branch and "fresh leak" points, and two factors are unreachable, so scores run high. |
 | **Worker acknowledges failed jobs** | It deletes the SQS message even when handling returned an error. | The DLQ and redelivery never trigger for handler errors. |

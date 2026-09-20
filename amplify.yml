@@ -12,7 +12,7 @@ applications:
             # app. Writing them to .env.production is what puts them in front of the server code:
             # without it sign-in is silently disabled and REVOKR_API_URL reads as unset, so the
             # dashboard would show sample data. `|| true` because grep exits 1 when none are set.
-            - 'env | grep -E "^(SITE_URL|SESSION_SECRET|GITHUB_APP_CLIENT_ID|GITHUB_APP_CLIENT_SECRET|GOOGLE_CLIENT_ID|GOOGLE_CLIENT_SECRET|REVOKR_API_URL|REVOKR_API_KEY)=" >> .env.production || true'
+            - 'env | grep -E "^(SITE_URL|SESSION_SECRET|GITHUB_APP_CLIENT_ID|GITHUB_APP_CLIENT_SECRET|GOOGLE_CLIENT_ID|GOOGLE_CLIENT_SECRET|REVOKR_API_URL|REVOKR_API_KEY|ADMIN_LOGINS)=" >> .env.production || true'
             - npm run build
       artifacts:
         baseDirectory: .next

@@ -14,7 +14,7 @@ interface IncidentsPageProps {
 export default async function IncidentsPage({ searchParams }: IncidentsPageProps) {
   const initialQuery = parseIncidentQuery(await searchParams);
   const incidents = await getIncidents();
-  const { monitored, lastPushAt } = getSetupContext();
+  const { monitored, lastPushAt } = await getSetupContext();
   const organization = incidents[0]?.repositoryOwner || "your organization";
 
   return (

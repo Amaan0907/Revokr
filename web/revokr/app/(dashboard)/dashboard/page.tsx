@@ -17,7 +17,7 @@ export const metadata: Metadata = { title: "Overview" };
 export default async function OverviewPage() {
   const session = await getSession();
   const [incidents, auditLog] = await Promise.all([getIncidents(), getAuditFeed()]);
-  const setup = getSetupContext();
+  const setup = await getSetupContext();
   // Nothing watched and nothing found: show the setup checklist rather than a page of zeroes.
   const firstRun = incidents.length === 0 && setup.monitored === 0;
   const organization = incidents[0]?.repositoryOwner ?? "your organization";

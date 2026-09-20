@@ -9,9 +9,9 @@ import { LiveIncidentProvider } from "@/components/incident-detail/incident-live
 import { RemediationOrder } from "@/components/incident-detail/remediation-order";
 import { RiskBreakdown } from "@/components/incident-detail/risk-breakdown";
 import { StatusCard } from "@/components/incident-detail/status-card";
-import { apiConfigured } from "@/lib/api";
 import { getIncidentDetail } from "@/lib/data";
 import { MOCK_OPERATOR } from "@/lib/mock-data";
+import { showsLiveData } from "@/lib/live-data";
 import { getSession } from "@/lib/session";
 
 interface IncidentPageProps {
@@ -34,7 +34,7 @@ export default async function IncidentPage({ params }: IncidentPageProps) {
   if (!detail) notFound();
 
   const { incident } = detail;
-  const source = apiConfigured() ? "api" : "sample";
+  const source = (await showsLiveData()) ? "api" : "sample";
   const session = await getSession();
 
   return (

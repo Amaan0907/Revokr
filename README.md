@@ -69,7 +69,7 @@ This section says what works today and what does not. Nothing here is rounded up
 |---|---|
 | Webhook receive + HMAC signature check + SQS enqueue | Works |
 | Secret detection | **Custom regex scanner** for 5 patterns: AWS access key ID, GitHub token, OpenAI key, Stripe live key, Slack bot token. It is not Gitleaks. |
-| **Scanning a real `git push`** | **Not yet.** The worker scans a `diff_content` field that GitHub's push payload does not include, and nothing fetches the commit diff yet. Incidents today come from a signed synthetic webhook (see below). |
+| **Scanning a real `git push`** | **Written, not yet run live.** GitHub's push payload has no diff, so the worker fetches the head commit's added lines from the GitHub API and scans those (unit-tested against a fake server). Only the head commit of a push is scanned, and private repositories need `GITHUB_TOKEN` to be a token that can read them. The verified end-to-end run so far used a signed synthetic webhook (see below). |
 | Risk engine | Works. Deterministic score 0–100 with the contributing factors shown in the UI. Some inputs are fixed placeholders for now (see ARCHITECTURE.md). |
 | Incident state machine + audit log | Works. Invalid transitions are rejected; every transition writes an audit row. |
 | Approval gate | Works. Rotation only starts from an explicit approve action. |
@@ -79,7 +79,7 @@ This section says what works today and what does not. Nothing here is rounded up
 | GitHub Actions secret update | Implemented with libsodium sealed-box encryption. Uses a personal access token, not a GitHub App installation token. There is no read-back verification yet. |
 | AI analyst | Uses **OpenAI (`gpt-4o-mini`)** on sanitized metadata, with a deterministic template fallback. Each analysis reports its `source`. **It does not use Amazon Bedrock** (the Go package is still named `bedrock` from the original plan). |
 | Slack notifications | Optional, one channel, never contains the secret. |
-| Dashboard | Incidents, incident detail, overview and audit pages read the real API when configured. **Repositories and Onboarding pages always show sample data.** The demo sign-in is open to anyone and can read incident data once the dashboard is connected to the API (it can only approve simulated incidents). |
+| Dashboard | Incidents, incident detail, overview and audit pages read the real API when configured. **Repositories and Onboarding pages always show sample data.** The demo sign-in is open to anyone and, unless `ADMIN_LOGINS` is set, can read incident data once the dashboard is connected to the API (it can only approve simulated incidents). Setting `ADMIN_LOGINS` limits real data to the listed accounts and shows everyone else sample data. |
 | Providers with automatic remediation | **AWS only.** Outside simulation, other detected providers stop at `NOT_SUPPORTED`. |
 
 ## Try it

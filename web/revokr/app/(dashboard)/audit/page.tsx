@@ -42,7 +42,7 @@ export default async function AuditPage() {
         title="Every step, who did it, what happened"
         description="Append-only. Entries cannot be edited or deleted from the product. Metadata holds fingerprints and masked values only."
       />
-      <AuditView rows={rows} now={getNow()} />
+      <AuditView rows={rows} now={await getNow()} />
     </div>
   );
 }

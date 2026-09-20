@@ -16,6 +16,7 @@ import (
 	"github.com/Amaan0907/Revokr/internal/detector"
 	"github.com/Amaan0907/Revokr/internal/incidents"
 	"github.com/Amaan0907/Revokr/internal/notifications"
+	githubactions "github.com/Amaan0907/Revokr/internal/providers/github"
 	"github.com/Amaan0907/Revokr/internal/queue"
 	"github.com/Amaan0907/Revokr/internal/risk"
 )
@@ -85,8 +86,18 @@ func handleJob(ctx context.Context, pool *pgxpool.Pool, body string) error {
 	log.Printf("worker: processing detection job for %s/%s at commit %s",
 		job.RepositoryOwner, job.RepositoryName, job.CommitSHA)
 
+	// GitHub's push webhook carries no diff, so a real push arrives without one and the worker
+	// fetches it. A simulated job that carries none has nothing to scan and must not call GitHub.
+	if job.DiffContent == "" && !job.Simulated {
+		diff, err := githubactions.FetchCommitAdditions(ctx, job.RepositoryOwner, job.RepositoryName,
+			job.CommitSHA, os.Getenv("GITHUB_TOKEN"))
+		if err != nil {
+			return err
+		}
+		job.DiffContent = diff
+	}
 	if job.DiffContent == "" {
-		log.Printf("worker: no diff content provided for commit %s, skipping scan", job.CommitSHA)
+		log.Printf("worker: no diff content for commit %s, skipping scan", job.CommitSHA)
 		return nil
 	}
 
