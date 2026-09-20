@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import Form from "next/form";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { LogOut } from "lucide-react";
 import { UserAvatar } from "./user-avatar";
 import type { SessionMode, SessionUser } from "@/lib/session";
 import { cn } from "@/lib/utils";
@@ -104,9 +105,11 @@ export function Sidebar({ user, mode, needsAttention }: SidebarProps) {
         <form action="/api/auth/logout" method="post" className="ml-auto">
           <button
             type="submit"
-            className="cursor-pointer rounded-[6px] px-1.5 py-1 font-mono text-[10px] text-muted-foreground transition-colors hover:text-[#f5f5f7]"
+            title="Sign out"
+            className="flex cursor-pointer items-center rounded-[6px] p-1.5 text-muted-foreground transition-colors hover:bg-white/8 hover:text-[#f5f5f7]"
           >
-            Sign out
+            <LogOut aria-hidden className="size-4" />
+            <span className="sr-only">Sign out</span>
           </button>
         </form>
       </div>
