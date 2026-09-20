@@ -4,10 +4,13 @@ import { btn, PageHeader } from "@/components/ds/primitives";
 import { InstallGitHubApp } from "@/components/repositories/install-github-app";
 import { ProviderCoverage } from "@/components/repositories/provider-coverage";
 import { RepositoriesView } from "@/components/repositories/repositories-view";
+import { InstalledRepositories } from "@/components/repositories/installed-repositories";
 import { StateCard } from "@/components/states/state-card";
 import { GITHUB_APP_INSTALL_URL } from "@/lib/github-app";
 import { STATUS_META } from "@/lib/incident-meta";
 import { getDataSource } from "@/lib/live-data";
+import { getInstalledRepositories } from "@/lib/repositories-api";
+import { getSession } from "@/lib/session";
 import { mockIncidents, mockInstallation, mockRepositories } from "@/lib/mock-data";
 
 export const metadata: Metadata = { title: "Repositories" };
@@ -17,30 +20,38 @@ interface RepositoriesPageProps {
 }
 
 export default async function RepositoriesPage({ searchParams }: RepositoriesPageProps) {
-  // There is no API endpoint for repositories or installations yet, so only the sample data has a
-  // list to show. A real sign-in gets an honest empty state, never made-up repositories.
+  // Only the sample data (the demo sign-in, or no backend) has made-up repositories. A real sign-in
+  // sees the repositories its own GitHub account installed the App on, and nothing else.
   if ((await getDataSource()) !== "sample") {
+    const session = await getSession();
+    const installed = session?.mode === "github" ? await getInstalledRepositories(session.user.id) : [];
+
     return (
       <div className="flex flex-col gap-[18px]">
         <PageHeader eyebrow="Repositories" title="Your repositories" />
-        <StateCard
-          size="page"
-          eyebrow="Repositories"
-          title="This page doesn't list repositories yet"
-          actions={
-            <>
-              <a href={GITHUB_APP_INSTALL_URL} className={btn({ variant: "primary", size: "lg" })}>
-                Install GitHub App
-              </a>
-              <Link href="/incidents" className={btn({ size: "lg" })}>
-                View incidents
-              </Link>
-            </>
-          }
-        >
-          Repositories are registered when you install the GitHub App on them, and any incident found in
-          one appears under Incidents. The repository list itself isn&apos;t connected to the API yet.
-        </StateCard>
+        {installed.length > 0 ? (
+          <InstalledRepositories repositories={installed} />
+        ) : (
+          <StateCard
+            size="page"
+            eyebrow="Repositories"
+            title="No repositories connected yet"
+            actions={
+              <>
+                <a href={GITHUB_APP_INSTALL_URL} className={btn({ variant: "primary", size: "lg" })}>
+                  Install GitHub App
+                </a>
+                <Link href="/incidents" className={btn({ size: "lg" })}>
+                  View incidents
+                </Link>
+              </>
+            }
+          >
+            {session?.mode === "github"
+              ? "Install the GitHub App on a repository and it is listed here. If you just installed it and nothing appears, GitHub may not have delivered the installation event; check the App's Recent deliveries."
+              : "This list shows the repositories your GitHub account installed the App on. Sign in with GitHub to see yours."}
+          </StateCard>
+        )}
       </div>
     );
   }

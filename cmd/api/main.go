@@ -98,6 +98,7 @@ func main() {
 	}
 	githubapp.RegisterWebhook(r, githubApp.WebhookSecret, queueClient, installations)
 	incidents.RegisterRoutes(r, pool)
+	githubapp.RegisterRepositoryRoutes(r, pool)
 
 	r.Run(":" + port)
 }
