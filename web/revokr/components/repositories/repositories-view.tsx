@@ -51,6 +51,14 @@ function InstallationCard({ installation, visible }: { installation: GitHubInsta
         >
           Manage installation
         </a>
+        <a
+          href="https://github.com/apps/revokr/installations/new"
+          target="_blank"
+          rel="noreferrer"
+          className={btn({ variant: "secondary" })}
+        >
+          Install on more repositories
+        </a>
         <Btn onClick={refresh} disabled={refreshing}>
           {refreshing ? "Refreshing…" : "Refresh repo list"}
         </Btn>
