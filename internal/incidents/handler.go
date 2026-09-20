@@ -23,6 +23,34 @@ func RegisterRoutes(r *gin.Engine, pool *pgxpool.Pool) {
 		api.POST("/:id/approve", handleApproveIncident(pool))
 		api.POST("/:id/deny", handleDenyIncident(pool))
 	}
+
+	r.GET("/api/audit", handleListAuditFeed(pool))
+}
+
+// handleListAuditFeed serves the cross-incident audit feed the dashboard's
+// overview and audit page read; per-incident history stays on
+// /api/incidents/:id/audit.
+func handleListAuditFeed(pool *pgxpool.Pool) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if pool == nil {
+			c.JSON(http.StatusOK, gin.H{"audit_logs": []AuditLog{}})
+			return
+		}
+
+		limit, _ := strconv.Atoi(c.DefaultQuery("limit", "50"))
+
+		logs, err := ListAuditLogs(c.Request.Context(), pool, limit)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		if logs == nil {
+			logs = []AuditLog{}
+		}
+
+		c.JSON(http.StatusOK, gin.H{"audit_logs": logs})
+	}
 }
 
 func handleListIncidents(pool *pgxpool.Pool) gin.HandlerFunc {

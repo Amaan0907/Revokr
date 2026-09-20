@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -85,6 +86,32 @@ func GetAuditLogs(ctx context.Context, pool *pgxpool.Pool, incidentID string) ([
 	}
 	defer rows.Close()
 
+	return scanAuditLogs(rows)
+}
+
+// ListAuditLogs returns the newest audit entries across all incidents, newest
+// first. There is no paging yet, so limit is capped at 100 (50 when unset).
+func ListAuditLogs(ctx context.Context, pool *pgxpool.Pool, limit int) ([]AuditLog, error) {
+	if limit <= 0 || limit > 100 {
+		limit = 50
+	}
+
+	query := `
+		SELECT id, incident_id, user_id, actor, action, result, metadata, timestamp
+		FROM audit_logs
+		ORDER BY timestamp DESC, id DESC
+		LIMIT $1;
+	`
+	rows, err := pool.Query(ctx, query, limit)
+	if err != nil {
+		return nil, fmt.Errorf("query audit feed: %w", err)
+	}
+	defer rows.Close()
+
+	return scanAuditLogs(rows)
+}
+
+func scanAuditLogs(rows pgx.Rows) ([]AuditLog, error) {
 	var logs []AuditLog
 	for rows.Next() {
 		var l AuditLog
