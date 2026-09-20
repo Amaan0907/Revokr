@@ -2,8 +2,15 @@
 
 import { Card, Eyebrow } from "@/components/ds/primitives";
 import { STATUS_META } from "@/lib/incident-meta";
-import type { Analysis, IncidentStatus } from "@/lib/types";
+import type { Analysis, AnalysisSource, IncidentStatus } from "@/lib/types";
 import { useLiveIncident } from "./incident-live";
+
+// Shown exactly as the API reports it, so the panel never misstates who wrote the text.
+const SOURCE_LABEL: Record<AnalysisSource, string> = {
+  bedrock: "model (bedrock)",
+  openai: "model (openai)",
+  template: "template fallback",
+};
 
 interface AnalystPanelProps {
   analysis: Analysis | null;
@@ -41,7 +48,7 @@ export function AnalystPanel({ analysis, initialStatus }: AnalystPanelProps) {
     );
   }
 
-  const source = analysis.source === "bedrock" ? "model (bedrock)" : "template fallback";
+  const source = SOURCE_LABEL[analysis.source];
 
   return (
     <Card as="section" aria-labelledby="analyst-heading" className="flex flex-col gap-3 p-5">

@@ -44,11 +44,13 @@ export type AuditAction =
   | "gh_secret_updated"
   | "verified"
   | "resolved"
-  | "failed";
+  | "failed"
+  | "not_supported";
 
 export type AuditResult = "success" | "failure" | "pending";
 
-export type AnalysisSource = "bedrock" | "template";
+// "openai" is what the Go analyst reports today; "bedrock" is kept for the planned Bedrock analyst.
+export type AnalysisSource = "bedrock" | "openai" | "template";
 
 // incidents.risk_factors is JSONB with no fixed shape yet; this is the shape the UI renders.
 export interface RiskFactor {
