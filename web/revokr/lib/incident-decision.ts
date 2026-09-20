@@ -1,6 +1,7 @@
 // Server-side gate for approve and deny. The browser never calls the Go API: it posts to a Next route
-// handler, which checks who is asking and then forwards the decision. The Go API has no authentication
-// of its own, so this is the only thing standing between a request and a rotation on the dashboard path.
+// handler, which checks who is asking and then forwards the decision. The Go API only checks a shared
+// secret (see apiFetch), not who the user is, so this is the only per-user check between a request and
+// a rotation on the dashboard path.
 import { NextResponse, type NextRequest } from "next/server";
 import { DECISION_TIMEOUT_MS, ApiError, apiConfigured, apiFetch } from "./api";
 import { isSameOrigin } from "./auth-config";

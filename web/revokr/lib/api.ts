@@ -1,5 +1,9 @@
 // Server-side client for the Go API. Only server components and route handlers may import this:
-// REVOKR_API_URL has no NEXT_PUBLIC_ prefix on purpose, so the API's address never reaches the browser.
+// REVOKR_API_URL and REVOKR_API_KEY have no NEXT_PUBLIC_ prefix on purpose, so neither the API's
+// address nor its shared secret ever reaches the browser.
+
+// The header the Go API reads its shared secret from.
+const API_KEY_HEADER = "X-Revokr-Key";
 
 const REQUEST_TIMEOUT_MS = 10_000;
 
@@ -34,15 +38,23 @@ function apiUrl(path: string): string {
 }
 
 // Calls the Go API and returns the parsed JSON body. Never cached: incident status changes under it.
+// Sends REVOKR_API_KEY as X-Revokr-Key when it is set; the API ignores the header until it is
+// configured to require one, so setting it here first is safe.
 export async function apiFetch<T>(
   path: string,
   init: RequestInit = {},
   timeoutMs: number = REQUEST_TIMEOUT_MS,
 ): Promise<T> {
+  // Merge rather than replace: callers pass their own headers (the approve/deny POST sets Content-Type).
+  const headers = new Headers(init.headers);
+  const apiKey = process.env.REVOKR_API_KEY?.trim();
+  if (apiKey) headers.set(API_KEY_HEADER, apiKey);
+
   let response: Response;
   try {
     response = await fetch(apiUrl(path), {
       ...init,
+      headers,
       cache: "no-store",
       signal: AbortSignal.timeout(timeoutMs),
     });
