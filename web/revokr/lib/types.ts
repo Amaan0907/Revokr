@@ -132,6 +132,16 @@ export interface Repository {
   lastPushAt: string | null;
 }
 
+// One connected repository as the overview lists it.
+export interface Project {
+  id: string;
+  owner: string;
+  name: string;
+  href: string;
+  // Incidents that aren't resolved yet.
+  openIncidents: number;
+}
+
 export interface GitHubInstallation {
   installationId: number;
   installedBy: string;

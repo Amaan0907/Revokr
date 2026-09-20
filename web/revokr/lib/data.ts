@@ -16,6 +16,9 @@ import {
   type IncidentsResponse,
 } from "./incident-api";
 import { getDataSource } from "./live-data";
+import { STATUS_META } from "./incident-meta";
+import { getInstalledRepositories, getInstalledRepository, type InstalledRepository } from "./repositories-api";
+import { getSession } from "./session";
 import {
   getMockIncidentDetail,
   MOCK_NOW,
@@ -30,6 +33,8 @@ import type {
   Incident,
   IncidentDetail,
   IncidentProgress,
+  Project,
+  Repository,
 } from "./types";
 
 // The Go API returns at most 100 rows of either list until it has paging.
@@ -101,14 +106,109 @@ export const getIncidentDetail = cache(async (id: string): Promise<IncidentDetai
   return { ...progress, analysis: await getAnalysis(id) };
 });
 
-// What the empty states need to know about setup. Repositories and the GitHub installation have no
-// API endpoint yet, so a viewer of real data gets nothing here rather than sample values.
+// The signed-in GitHub account's installed repositories, once per request. It only decorates the
+// overview and the empty states, so an API failure here must not take a page down.
+const installedRepositories = cache(
+  (githubUserId: string): Promise<InstalledRepository[]> => getInstalledRepositories(githubUserId).catch(() => []),
+);
+
+// The cards on the overview. Sample data lists the sample repositories, a GitHub sign-in lists the
+// repositories it installed the App on, and any other real sign-in has none.
+export const getProjects = cache(async (): Promise<Project[]> => {
+  const source = await getDataSource();
+
+  if (source === "sample") {
+    const open: Record<string, number> = {};
+    for (const incident of mockIncidents) {
+      if (["resolved", "closed"].includes(STATUS_META[incident.status].group)) continue;
+      open[incident.repositoryId] = (open[incident.repositoryId] ?? 0) + 1;
+    }
+    return mockRepositories.map((repository) => ({
+      id: repository.id,
+      owner: repository.owner,
+      name: repository.name,
+      href: `/repositories/${repository.id}`,
+      openIncidents: open[repository.id] ?? 0,
+    }));
+  }
+
+  const session = await getSession();
+  if (session?.mode !== "github") return [];
+  return (await installedRepositories(session.user.id)).map((repository) => ({
+    id: repository.id,
+    owner: repository.owner,
+    name: repository.name,
+    href: `/repositories/${repository.id}`,
+    openIncidents: repository.openIncidents,
+  }));
+});
+
+// Everything one project's page shows. Exactly one of installed and sample is set: installed for a
+// repository the signed-in GitHub account connected, sample for a repository of the sample data.
+export interface ProjectDetail {
+  owner: string;
+  name: string;
+  incidents: Incident[];
+  auditLog: AuditLogEntry[];
+  installed: InstalledRepository | null;
+  sample: Repository | null;
+}
+
+// Undefined when there is no such project for this viewer, which the page turns into "not found".
+export const getProjectDetail = cache(async (id: string): Promise<ProjectDetail | undefined> => {
+  const source = await getDataSource();
+
+  if (source === "sample") {
+    const repository = mockRepositories.find((candidate) => candidate.id === id);
+    if (!repository) return undefined;
+    return {
+      owner: repository.owner,
+      name: repository.name,
+      incidents: mockIncidents.filter((incident) => incident.repositoryId === id),
+      auditLog: mockAuditLog,
+      installed: null,
+      sample: repository,
+    };
+  }
+
+  const session = await getSession();
+  if (session?.mode !== "github") return undefined;
+
+  // The API only answers for a repository this GitHub account installed, and says 404 otherwise.
+  const found = await getInstalledRepository(session.user.id, id);
+  if (!found) return undefined;
+  return {
+    owner: found.repository.owner,
+    name: found.repository.name,
+    incidents: found.incidents,
+    // The audit log is only readable by viewers allowed to see live data.
+    auditLog: source === "live" ? await getAuditFeed() : [],
+    installed: found.repository,
+    sample: null,
+  };
+});
+
+// What the empty states need to know about setup. A GitHub sign-in gets it from the repositories that
+// account installed the App on; any other real sign-in gets nothing rather than sample values.
 export async function getSetupContext(): Promise<{
   installation: GitHubInstallation | null;
   monitored: number;
   lastPushAt: string | null;
 }> {
-  if ((await getDataSource()) !== "sample") return { installation: null, monitored: 0, lastPushAt: null };
+  if ((await getDataSource()) !== "sample") {
+    const session = await getSession();
+    if (session?.mode !== "github") return { installation: null, monitored: 0, lastPushAt: null };
+
+    const installed = await installedRepositories(session.user.id);
+    const first = installed[0];
+    return {
+      installation: first
+        ? { installationId: first.installationId, installedBy: first.installedBy, organization: first.owner }
+        : null,
+      monitored: installed.filter((repository) => repository.enabled).length,
+      lastPushAt: null,
+    };
+  }
 
   const monitored = mockRepositories.filter((repository) => repository.enabled);
   const lastPushAt =
