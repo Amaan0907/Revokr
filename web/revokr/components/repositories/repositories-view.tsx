@@ -44,7 +44,7 @@ function InstallationCard({ installation, visible }: { installation: GitHubInsta
       </div>
       <div className="flex flex-wrap gap-2">
         <a
-          href={`https://github.com/settings/installations/${installation.installationId}`}
+          href="https://github.com/settings/installations"
           target="_blank"
           rel="noreferrer"
           className={btn({ variant: "primary" })}
