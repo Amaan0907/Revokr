@@ -40,7 +40,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
     : "";
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="mx-auto flex w-full max-w-[760px] flex-col gap-5">
       <PageHeader eyebrow="Settings" title="Settings" />
 
       {deleteError && (
@@ -49,8 +49,8 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
         </Card>
       )}
 
-      {/* Two columns on a wide screen so the cards fill the page instead of stretching into bars. */}
-      <div className="grid gap-5 xl:grid-cols-2 xl:items-start">
+      {/* One column of cards, centred on the page. */}
+      <div className="flex flex-col gap-5">
         <SimulationCard initial={simulation} />
         <NotificationsCard />
 

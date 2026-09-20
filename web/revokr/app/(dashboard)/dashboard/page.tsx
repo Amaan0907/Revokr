@@ -18,7 +18,7 @@ export default async function OverviewPage() {
     <div className="flex flex-col gap-5">
       <PageHeader
         eyebrow={`Overview${firstName ? ` · welcome back, ${firstName}` : ""}`}
-        title="Your projects"
+        title="Your Projects"
         description="Open a project to see its incidents and where each one is in remediation."
       />
 
