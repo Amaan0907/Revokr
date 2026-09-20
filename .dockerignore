@@ -1,0 +1,9 @@
+# Build context for cmd/api/Dockerfile (and any other Dockerfile built from the repo root).
+# Only the Go module is needed. Excluding the rest keeps secrets out of build layers, avoids sending
+# hundreds of MB of web/node_modules to the daemon, and stops 'go build' inside the alpine image
+# from trying (and failing) to read git metadata. cmd/api/.dockerignore is NOT read for a root context.
+.git
+.env
+.env.*
+web
+**/node_modules

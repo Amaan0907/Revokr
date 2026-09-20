@@ -7,18 +7,19 @@ import { FocusBanner } from "@/components/overview/focus-banner";
 import { RemediationPipeline } from "@/components/overview/remediation-pipeline";
 import { SeverityBreakdown } from "@/components/overview/severity-breakdown";
 import { StatCard } from "@/components/overview/stat-card";
+import { getAuditFeed, getIncidents, getSetupContext } from "@/lib/data";
 import { formatDuration } from "@/lib/format";
 import { STATUS_META } from "@/lib/incident-meta";
-import { mockAuditLog, mockIncidents, mockInstallation, mockRepositories } from "@/lib/mock-data";
 import { getSession } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Overview" };
 
 export default async function OverviewPage() {
   const session = await getSession();
-  const incidents = mockIncidents;
+  const [incidents, auditLog] = await Promise.all([getIncidents(), getAuditFeed()]);
+  const setup = getSetupContext();
   // Nothing watched and nothing found: show the setup checklist rather than a page of zeroes.
-  const firstRun = incidents.length === 0 && !mockRepositories.some((repository) => repository.enabled);
+  const firstRun = incidents.length === 0 && setup.monitored === 0;
   const organization = incidents[0]?.repositoryOwner ?? "your organization";
   const firstName = (session?.user.name ?? session?.user.login ?? "").split(" ")[0];
 
@@ -34,7 +35,7 @@ export default async function OverviewPage() {
     : null;
 
   const incidentById = new Map(incidents.map((i) => [i.id, i]));
-  const recentActivity: ActivityItem[] = [...mockAuditLog]
+  const recentActivity: ActivityItem[] = [...auditLog]
     .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
     .slice(0, 7)
     .flatMap((entry) => {
@@ -51,7 +52,7 @@ export default async function OverviewPage() {
       />
 
       {firstRun ? (
-        <FirstRunOverview installation={mockInstallation} />
+        <FirstRunOverview installation={setup.installation} />
       ) : (
         <>
           <FocusBanner awaiting={awaiting} />

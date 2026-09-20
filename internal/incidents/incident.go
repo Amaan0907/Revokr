@@ -11,24 +11,28 @@ import (
 
 // Incident mirrors a row in the PostgreSQL incidents table.
 type Incident struct {
-	ID           string     `json:"id"`
-	RepositoryID string     `json:"repository_id"`
-	CommitSHA    string     `json:"commit_sha"`
-	FilePath     string     `json:"file_path"`
-	LineNumber   int        `json:"line_number"`
-	Provider     string     `json:"provider"`
-	SecretType   string     `json:"secret_type"`
-	Fingerprint  string     `json:"fingerprint"`
-	MaskedValue  string     `json:"masked_value"`
-	ResourceRef  string     `json:"resource_ref,omitempty"`
-	IsLive       *bool      `json:"is_live,omitempty"`
-	Severity     string     `json:"severity"`
-	RiskScore    int        `json:"risk_score"`
-	RiskFactors  any        `json:"risk_factors"`
-	Status       Status     `json:"status"`
-	Simulated    bool       `json:"simulated"`
-	CreatedAt    time.Time  `json:"created_at"`
-	ResolvedAt   *time.Time `json:"resolved_at,omitempty"`
+	ID           string `json:"id"`
+	RepositoryID string `json:"repository_id"`
+	// RepositoryOwner and RepositoryName come from a join on repositories; they
+	// are read-only and never written by Create.
+	RepositoryOwner string     `json:"repository_owner"`
+	RepositoryName  string     `json:"repository_name"`
+	CommitSHA       string     `json:"commit_sha"`
+	FilePath        string     `json:"file_path"`
+	LineNumber      int        `json:"line_number"`
+	Provider        string     `json:"provider"`
+	SecretType      string     `json:"secret_type"`
+	Fingerprint     string     `json:"fingerprint"`
+	MaskedValue     string     `json:"masked_value"`
+	ResourceRef     string     `json:"resource_ref,omitempty"`
+	IsLive          *bool      `json:"is_live,omitempty"`
+	Severity        string     `json:"severity"`
+	RiskScore       int        `json:"risk_score"`
+	RiskFactors     any        `json:"risk_factors"`
+	Status          Status     `json:"status"`
+	Simulated       bool       `json:"simulated"`
+	CreatedAt       time.Time  `json:"created_at"`
+	ResolvedAt      *time.Time `json:"resolved_at,omitempty"`
 }
 
 // Create inserts or updates an incident row in PostgreSQL.
@@ -82,11 +86,12 @@ func List(ctx context.Context, pool *pgxpool.Pool, limit int) ([]Incident, error
 	}
 
 	query := `
-		SELECT id, repository_id, commit_sha, file_path, line_number, provider,
-		       secret_type, fingerprint, masked_value, resource_ref, is_live, severity,
-		       risk_score, risk_factors, status, simulated, created_at, resolved_at
-		FROM incidents
-		ORDER BY created_at DESC
+		SELECT i.id, i.repository_id, r.owner, r.name, i.commit_sha, i.file_path, i.line_number, i.provider,
+		       i.secret_type, i.fingerprint, i.masked_value, i.resource_ref, i.is_live, i.severity,
+		       i.risk_score, i.risk_factors, i.status, i.simulated, i.created_at, i.resolved_at
+		FROM incidents i
+		LEFT JOIN repositories r ON r.id = i.repository_id
+		ORDER BY i.created_at DESC
 		LIMIT $1;
 	`
 	rows, err := pool.Query(ctx, query, limit)
@@ -100,10 +105,10 @@ func List(ctx context.Context, pool *pgxpool.Pool, limit int) ([]Incident, error
 		var inc Incident
 		var factorsRaw []byte
 		var statusStr string
-		var resourceRef *string
+		var resourceRef, repoOwner, repoName *string
 
 		if err := rows.Scan(
-			&inc.ID, &inc.RepositoryID, &inc.CommitSHA, &inc.FilePath, &inc.LineNumber,
+			&inc.ID, &inc.RepositoryID, &repoOwner, &repoName, &inc.CommitSHA, &inc.FilePath, &inc.LineNumber,
 			&inc.Provider, &inc.SecretType, &inc.Fingerprint, &inc.MaskedValue, &resourceRef,
 			&inc.IsLive, &inc.Severity, &inc.RiskScore, &factorsRaw, &statusStr, &inc.Simulated,
 			&inc.CreatedAt, &inc.ResolvedAt,
@@ -114,6 +119,12 @@ func List(ctx context.Context, pool *pgxpool.Pool, limit int) ([]Incident, error
 		inc.Status = Status(statusStr)
 		if resourceRef != nil {
 			inc.ResourceRef = *resourceRef
+		}
+		if repoOwner != nil {
+			inc.RepositoryOwner = *repoOwner
+		}
+		if repoName != nil {
+			inc.RepositoryName = *repoName
 		}
 		if len(factorsRaw) > 0 {
 			var f any
@@ -130,20 +141,21 @@ func List(ctx context.Context, pool *pgxpool.Pool, limit int) ([]Incident, error
 // GetByID fetches a single incident by its UUID.
 func GetByID(ctx context.Context, pool *pgxpool.Pool, id string) (*Incident, error) {
 	query := `
-		SELECT id, repository_id, commit_sha, file_path, line_number, provider,
-		       secret_type, fingerprint, masked_value, resource_ref, is_live, severity,
-		       risk_score, risk_factors, status, simulated, created_at, resolved_at
-		FROM incidents
-		WHERE id = $1;
+		SELECT i.id, i.repository_id, r.owner, r.name, i.commit_sha, i.file_path, i.line_number, i.provider,
+		       i.secret_type, i.fingerprint, i.masked_value, i.resource_ref, i.is_live, i.severity,
+		       i.risk_score, i.risk_factors, i.status, i.simulated, i.created_at, i.resolved_at
+		FROM incidents i
+		LEFT JOIN repositories r ON r.id = i.repository_id
+		WHERE i.id = $1;
 	`
 
 	var inc Incident
 	var factorsRaw []byte
 	var statusStr string
-	var resourceRef *string
+	var resourceRef, repoOwner, repoName *string
 
 	if err := pool.QueryRow(ctx, query, id).Scan(
-		&inc.ID, &inc.RepositoryID, &inc.CommitSHA, &inc.FilePath, &inc.LineNumber,
+		&inc.ID, &inc.RepositoryID, &repoOwner, &repoName, &inc.CommitSHA, &inc.FilePath, &inc.LineNumber,
 		&inc.Provider, &inc.SecretType, &inc.Fingerprint, &inc.MaskedValue, &resourceRef,
 		&inc.IsLive, &inc.Severity, &inc.RiskScore, &factorsRaw, &statusStr, &inc.Simulated,
 		&inc.CreatedAt, &inc.ResolvedAt,
@@ -154,6 +166,12 @@ func GetByID(ctx context.Context, pool *pgxpool.Pool, id string) (*Incident, err
 	inc.Status = Status(statusStr)
 	if resourceRef != nil {
 		inc.ResourceRef = *resourceRef
+	}
+	if repoOwner != nil {
+		inc.RepositoryOwner = *repoOwner
+	}
+	if repoName != nil {
+		inc.RepositoryName = *repoName
 	}
 	if len(factorsRaw) > 0 {
 		var f any

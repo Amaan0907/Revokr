@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { mockIncidents } from "./mock-data";
+import { getIncidents } from "./data";
 
 export const SIMULATION_COOKIE = "revokr_simulation";
 
@@ -9,5 +9,10 @@ export async function getSimulationMode(): Promise<boolean> {
   const stored = (await cookies()).get(SIMULATION_COOKIE)?.value;
   if (stored === "on") return true;
   if (stored === "off") return false;
-  return mockIncidents.some((incident) => incident.simulated);
+  try {
+    return (await getIncidents()).some((incident) => incident.simulated);
+  } catch {
+    // This runs in the layout, which the error page can't cover. The page reports the failure.
+    return false;
+  }
 }

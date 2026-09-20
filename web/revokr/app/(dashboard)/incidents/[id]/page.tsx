@@ -9,7 +9,10 @@ import { LiveIncidentProvider } from "@/components/incident-detail/incident-live
 import { RemediationOrder } from "@/components/incident-detail/remediation-order";
 import { RiskBreakdown } from "@/components/incident-detail/risk-breakdown";
 import { StatusCard } from "@/components/incident-detail/status-card";
-import { getMockIncidentDetail, MOCK_OPERATOR } from "@/lib/mock-data";
+import { apiConfigured } from "@/lib/api";
+import { getIncidentDetail } from "@/lib/data";
+import { MOCK_OPERATOR } from "@/lib/mock-data";
+import { getSession } from "@/lib/session";
 
 interface IncidentPageProps {
   params: Promise<{ id: string }>;
@@ -17,7 +20,7 @@ interface IncidentPageProps {
 
 export async function generateMetadata({ params }: IncidentPageProps): Promise<Metadata> {
   const { id } = await params;
-  const detail = getMockIncidentDetail(id);
+  const detail = await getIncidentDetail(id);
   return {
     title: detail
       ? `${detail.incident.secretType} in ${detail.incident.repositoryName}`
@@ -27,13 +30,19 @@ export async function generateMetadata({ params }: IncidentPageProps): Promise<M
 
 export default async function IncidentPage({ params }: IncidentPageProps) {
   const { id } = await params;
-  const detail = getMockIncidentDetail(id);
+  const detail = await getIncidentDetail(id);
   if (!detail) notFound();
 
   const { incident } = detail;
+  const source = apiConfigured() ? "api" : "sample";
+  const session = await getSession();
 
   return (
-    <LiveIncidentProvider detail={detail} operator={MOCK_OPERATOR}>
+    <LiveIncidentProvider
+      detail={detail}
+      operator={source === "api" ? (session?.user.login ?? MOCK_OPERATOR) : MOCK_OPERATOR}
+      source={source}
+    >
       <div className="flex flex-col gap-[18px]">
         <IncidentHeader incident={incident} />
         <StatusCard incident={incident} />

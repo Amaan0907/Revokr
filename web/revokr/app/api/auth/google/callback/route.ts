@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { GOOGLE_OAUTH_COOKIE, googleOAuthConfig, safeNextPath } from "@/lib/auth-config";
+import { GOOGLE_OAUTH_COOKIE, googleOAuthConfig, safeNextPath, siteOrigin } from "@/lib/auth-config";
 import { encodeSession, SESSION_COOKIE, sessionCookieOptions } from "@/lib/session";
 
 interface GoogleProfile {
@@ -11,7 +11,7 @@ interface GoogleProfile {
 }
 
 function fail(request: NextRequest, error: string) {
-  const response = NextResponse.redirect(new URL(`/login?error=${error}`, request.url));
+  const response = NextResponse.redirect(new URL(`/login?error=${error}`, siteOrigin(request)));
   response.cookies.delete({ name: GOOGLE_OAUTH_COOKIE, path: "/api/auth" });
   return response;
 }
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
       code,
       client_id: config.clientId,
       client_secret: config.clientSecret,
-      redirect_uri: new URL("/api/auth/google/callback", request.nextUrl.origin).toString(),
+      redirect_uri: new URL("/api/auth/google/callback", siteOrigin(request)).toString(),
       grant_type: "authorization_code",
       code_verifier: verifier,
     }),
@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
     null,
   );
 
-  const response = NextResponse.redirect(new URL(safeNextPath(stored.next), request.url));
+  const response = NextResponse.redirect(new URL(safeNextPath(stored.next), siteOrigin(request)));
   response.cookies.set(SESSION_COOKIE, session.value, sessionCookieOptions(session.maxAge));
   response.cookies.delete({ name: GOOGLE_OAUTH_COOKIE, path: "/api/auth" });
   return response;

@@ -202,6 +202,7 @@ export const AUDIT_ACTION_META: Record<AuditAction, { label: string; icon: Lucid
   verified: { label: "Leaked key confirmed dead", icon: ShieldCheck },
   resolved: { label: "Incident resolved", icon: CircleCheck },
   failed: { label: "Remediation step failed", icon: CircleX },
+  not_supported: { label: "Provider not supported", icon: Ban },
 };
 
 export function auditLabel(entry: AuditLogEntry): string {

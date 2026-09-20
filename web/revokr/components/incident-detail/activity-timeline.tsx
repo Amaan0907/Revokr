@@ -10,6 +10,18 @@ import { useLiveIncident } from "./incident-live";
 // path and line are merged into one "file" row; isLive is already said by the entry's label.
 const HIDDEN_KEYS = new Set(["isLive", "path", "line"]);
 
+// Real audit rows carry lists and nested objects (the secrets a rotation wrote, the scored risk
+// factors), which String() would print as "[object Object]".
+function formatValue(value: unknown): string {
+  if (Array.isArray(value)) return value.map(formatValue).join(", ");
+  if (typeof value === "object" && value !== null) {
+    const { name, points } = value as { name?: unknown; points?: unknown };
+    if (typeof name === "string" && typeof points === "number") return `${name} (+${points})`;
+    return JSON.stringify(value);
+  }
+  return String(value);
+}
+
 function metadataLines(entry: AuditLogEntry): string[] {
   const metadata = entry.metadata;
   if (!metadata) return [];
@@ -21,7 +33,7 @@ function metadataLines(entry: AuditLogEntry): string[] {
   }
   for (const [key, value] of Object.entries(metadata)) {
     if (HIDDEN_KEYS.has(key) || value === null || value === undefined) continue;
-    lines.push(`${key}: ${String(value)}`);
+    lines.push(`${key}: ${formatValue(value)}`);
   }
   return lines;
 }

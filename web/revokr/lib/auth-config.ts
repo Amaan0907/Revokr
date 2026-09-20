@@ -43,9 +43,25 @@ export function safeNextPath(value: string | null | undefined, fallback = "/dash
   return value;
 }
 
+// The address browsers use to reach this site. Behind some hosts (Amplify's proxy) the request's own
+// URL reports an internal address such as https://localhost:3000, which breaks the OAuth redirect URI,
+// every redirect built from the request, and the same-origin check. SITE_URL pins the real address;
+// unset (local development) the request's own origin is right and is used.
+export function siteOrigin(request: NextRequest): string {
+  const configured = process.env.SITE_URL?.trim();
+  if (configured) {
+    try {
+      return new URL(configured).origin;
+    } catch {
+      // A malformed SITE_URL falls back rather than taking sign-in down.
+    }
+  }
+  return request.nextUrl.origin;
+}
+
 export function isSameOrigin(request: NextRequest): boolean {
   const origin = request.headers.get("origin");
-  return origin === null || origin === request.nextUrl.origin;
+  return origin === null || origin === siteOrigin(request);
 }
 
 export const AUTH_ERRORS: Record<string, string> = {
