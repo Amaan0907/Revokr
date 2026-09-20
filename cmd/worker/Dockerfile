@@ -1,4 +1,3 @@
-
 FROM golang:1.26-alpine AS builder
 
 WORKDIR /app
@@ -8,7 +7,7 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o server ./cmd/api
+RUN go build -o worker ./cmd/worker
 
 FROM alpine:latest
 
@@ -16,9 +15,7 @@ WORKDIR /app
 
 RUN apk --no-cache add ca-certificates
 
-COPY --from=builder /app/server .
+COPY --from=builder /app/worker .
 
-EXPOSE 3000
-
-CMD ["./server"]
-
+# No EXPOSE: the worker only polls SQS, it serves no HTTP.
+CMD ["./worker"]
