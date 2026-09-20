@@ -3,6 +3,13 @@
 
 const REQUEST_TIMEOUT_MS = 10_000;
 
+// Approval is one POST during which the API runs the whole rotation. Giving up early would cancel
+// the request's context on the Go side and could strand the incident mid-rotation, so it waits.
+export const DECISION_TIMEOUT_MS = 120_000;
+
+// The analyst may call a model, which is slower than a database read.
+export const ANALYSIS_TIMEOUT_MS = 30_000;
+
 // True when the dashboard is wired to a backend. When it's false the UI runs on sample data; when
 // it's true and a request fails, callers must surface the error and never fall back to sample data.
 export function apiConfigured(): boolean {
@@ -27,13 +34,17 @@ function apiUrl(path: string): string {
 }
 
 // Calls the Go API and returns the parsed JSON body. Never cached: incident status changes under it.
-export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
+export async function apiFetch<T>(
+  path: string,
+  init: RequestInit = {},
+  timeoutMs: number = REQUEST_TIMEOUT_MS,
+): Promise<T> {
   let response: Response;
   try {
     response = await fetch(apiUrl(path), {
       ...init,
       cache: "no-store",
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      signal: AbortSignal.timeout(timeoutMs),
     });
   } catch {
     throw new ApiError(`Could not reach the Revokr API (${path})`);

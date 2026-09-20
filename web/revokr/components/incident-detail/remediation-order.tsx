@@ -42,7 +42,9 @@ export function RemediationOrder({ initialStatus }: { initialStatus: IncidentSta
   // Nothing to run for a secret Revokr can't validate or rotate.
   if (initialStatus === "NOT_SUPPORTED") return null;
 
-  const stopped = STOPPED.includes(status) || resolution !== null;
+  // A resolved incident has nothing left to run: a step with no row was never going to, and calling
+  // it "pending" on a closed incident would say otherwise.
+  const stopped = STOPPED.includes(status) || status === "RESOLVED" || resolution !== null;
 
   return (
     <Card as="section" aria-labelledby="order-heading" className="flex flex-col gap-3 p-5">

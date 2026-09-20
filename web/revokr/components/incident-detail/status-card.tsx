@@ -92,7 +92,11 @@ function describe(
   }
 }
 
-function ManualSteps({ steps, onHandled }: { steps: string[]; onHandled: () => void }) {
+// Only the sample data can be marked handled: the API has no transition out of these statuses, so on
+// real data the page says so rather than pretend to record something it can't.
+const NOT_RECORDED = "Recording the outcome of manual steps isn't supported yet. This incident stays as it is in the audit log.";
+
+function ManualSteps({ steps, onHandled }: { steps: string[]; onHandled?: () => void }) {
   return (
     <div className="flex flex-col gap-2.5">
       <Eyebrow className="tracking-[.14em] text-attention">do this by hand · {steps.length} steps</Eyebrow>
@@ -109,11 +113,15 @@ function ManualSteps({ steps, onHandled }: { steps: string[]; onHandled: () => v
           </li>
         ))}
       </ol>
-      <div className="flex flex-wrap gap-2">
-        <Btn variant="primary" onClick={onHandled}>
-          Mark as handled
-        </Btn>
-      </div>
+      {onHandled ? (
+        <div className="flex flex-wrap gap-2">
+          <Btn variant="primary" onClick={onHandled}>
+            Mark as handled
+          </Btn>
+        </div>
+      ) : (
+        <span className="font-mono text-[10px] text-muted-foreground">{NOT_RECORDED}</span>
+      )}
     </div>
   );
 }
@@ -121,7 +129,9 @@ function ManualSteps({ steps, onHandled }: { steps: string[]; onHandled: () => v
 // The card that says where the incident stands and what, if anything, is being asked of the person.
 // Every state says what Revokr did, what it didn't, and never implies a rotation that didn't happen.
 export function StatusCard({ incident }: { incident: Incident }) {
-  const { status, actions, auditLog, resolution, approve, deny, retry, markHandled } = useLiveIncident();
+  const { source, status, actions, auditLog, resolvedAt, error, resolution, approve, deny, retry, markHandled } =
+    useLiveIncident();
+  const recordable = source === "sample";
   const [approving, setApproving] = useState(false);
   const [denying, setDenying] = useState(false);
   const [showManual, setShowManual] = useState(false);
@@ -129,7 +139,7 @@ export function StatusCard({ incident }: { incident: Incident }) {
   const failed = actions.find((action) => action.status === "FAILED");
   const steps = manualSteps(incident);
   const decision = [...auditLog].reverse().find((entry) => entry.action === "approved" || entry.action === "denied");
-  const closedAt = [...auditLog].reverse().find((entry) => entry.action === "resolved")?.timestamp ?? incident.resolvedAt;
+  const closedAt = [...auditLog].reverse().find((entry) => entry.action === "resolved")?.timestamp ?? resolvedAt;
 
   const copy = resolution
     ? BY_HAND[resolution]
@@ -155,6 +165,12 @@ export function StatusCard({ incident }: { incident: Incident }) {
         <span className="text-[17px] font-medium tracking-[-.01em]">{copy.head}</span>
         <span className="text-[13px] leading-[1.6] text-muted-foreground">{copy.body}</span>
       </div>
+
+      {error && (
+        <span role="alert" className="text-[12px] leading-[1.6] text-failed">
+          {error}
+        </span>
+      )}
 
       {decision && status !== "AWAITING_APPROVAL" && (
         <span className="font-mono text-[11px] text-muted-foreground">
@@ -207,20 +223,24 @@ export function StatusCard({ incident }: { incident: Incident }) {
             </span>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Btn variant="primary" onClick={retry}>
-              Retry this action
-            </Btn>
+            {recordable && (
+              <Btn variant="primary" onClick={retry}>
+                Retry this action
+              </Btn>
+            )}
             <Btn aria-expanded={showManual} onClick={() => setShowManual((open) => !open)}>
               {showManual ? "Hide manual steps" : "Show manual steps"}
             </Btn>
           </div>
-          <span className="font-mono text-[10px] text-muted-foreground">Retrying needs your approval again.</span>
-          {showManual && <ManualSteps steps={steps} onHandled={() => markHandled("manual")} />}
+          {recordable && (
+            <span className="font-mono text-[10px] text-muted-foreground">Retrying needs your approval again.</span>
+          )}
+          {showManual && <ManualSteps steps={steps} onHandled={recordable ? () => markHandled("manual") : undefined} />}
         </div>
       )}
 
       {status === "REQUIRES_USER_ACTION" && !resolution && (
-        <ManualSteps steps={steps} onHandled={() => markHandled("manual")} />
+        <ManualSteps steps={steps} onHandled={recordable ? () => markHandled("manual") : undefined} />
       )}
 
       {status === "NOT_SUPPORTED" && !resolution && (
@@ -236,12 +256,16 @@ export function StatusCard({ incident }: { incident: Incident }) {
               revoke the old value and resolve this incident.
             </span>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Btn variant="primary" onClick={() => markHandled("manual")}>
-              Mark as handled
-            </Btn>
-            <Btn onClick={() => markHandled("false_positive")}>Dismiss as false positive</Btn>
-          </div>
+          {recordable ? (
+            <div className="flex flex-wrap gap-2">
+              <Btn variant="primary" onClick={() => markHandled("manual")}>
+                Mark as handled
+              </Btn>
+              <Btn onClick={() => markHandled("false_positive")}>Dismiss as false positive</Btn>
+            </div>
+          ) : (
+            <span className="font-mono text-[10px] text-muted-foreground">{NOT_RECORDED}</span>
+          )}
         </div>
       )}
     </Card>

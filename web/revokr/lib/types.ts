@@ -116,6 +116,10 @@ export interface IncidentDetail {
   analysis: Analysis | null;
 }
 
+// What changes while a rotation runs. Polling reads this and never the analysis, because each
+// analysis request may call a model.
+export type IncidentProgress = Omit<IncidentDetail, "analysis">;
+
 // GET /api/repositories. `enabled` is the opt-in: pushes are only scanned where it is on.
 export interface Repository {
   id: string;
