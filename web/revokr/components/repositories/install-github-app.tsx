@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { btn } from "@/components/ds/primitives";
 import { StateCard } from "@/components/states/state-card";
+import { GITHUB_APP_INSTALL_URL } from "@/lib/github-app";
 
 // The GitHub App is what delivers push webhooks and what writes replacement values into Actions
 // secrets, so nothing works before it's installed.
@@ -12,7 +13,7 @@ export function InstallGitHubApp() {
       title="Revokr needs the GitHub App to watch your repositories"
       actions={
         <>
-          <a href="https://github.com/apps/revokr/installations/new" className={btn({ variant: "primary", size: "lg" })}>
+          <a href={GITHUB_APP_INSTALL_URL} className={btn({ variant: "primary", size: "lg" })}>
             Install GitHub App
           </a>
           <Link href="/settings" className={btn({ size: "lg" })}>

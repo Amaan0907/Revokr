@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Btn, btn, Card, Cell, PILL, TableHead, TableRow, TableScroller } from "@/components/ds/primitives";
 import { Switch } from "@/components/ds/switch";
 import { timeAgo } from "@/lib/format";
+import { GITHUB_APP_INSTALL_URL } from "@/lib/github-app";
 import type { GitHubInstallation, Repository } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -52,7 +53,7 @@ function InstallationCard({ installation, visible }: { installation: GitHubInsta
           Manage installation
         </a>
         <a
-          href="https://github.com/apps/revokr/installations/new"
+          href={GITHUB_APP_INSTALL_URL}
           target="_blank"
           rel="noreferrer"
           className={btn({ variant: "secondary" })}

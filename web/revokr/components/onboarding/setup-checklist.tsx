@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { btn, Card } from "@/components/ds/primitives";
+import { GITHUB_APP_INSTALL_URL } from "@/lib/github-app";
 import type { GitHubInstallation } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -26,7 +27,7 @@ function buildSteps({ installation, monitored }: SetupChecklistProps): Step[] {
         ? `Done for ${installation.organization} · installation_id ${installation.installationId} by @${installation.installedBy}.`
         : "Revokr needs it to receive push webhooks and to write replacement values into Actions secrets.",
       state: installed ? "done" : "current",
-      cta: installed ? undefined : { label: "Install GitHub App", href: "https://github.com/apps/revokr/installations/new" },
+      cta: installed ? undefined : { label: "Install GitHub App", href: GITHUB_APP_INSTALL_URL },
     },
     {
       title: "Choose repositories to monitor",

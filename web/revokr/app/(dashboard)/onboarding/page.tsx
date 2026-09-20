@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { btn, Card, Eyebrow, PageHeader } from "@/components/ds/primitives";
 import { SetupChecklist } from "@/components/onboarding/setup-checklist";
 import { StateCard } from "@/components/states/state-card";
+import { GITHUB_APP_INSTALL_URL } from "@/lib/github-app";
 import { mockInstallation, mockRepositories } from "@/lib/mock-data";
 
 export const metadata: Metadata = { title: "Getting started" };
@@ -10,7 +11,6 @@ interface OnboardingPageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
-const INSTALL_URL = "https://github.com/apps/revokr/installations/new";
 
 // Where GitHub sends you back after installing the app. If it comes back with an error, or without
 // an installation, this same page says so instead of pretending it worked.
@@ -28,7 +28,7 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
           eyebrow="Callback failed"
           title="GitHub returned without an installation"
           actions={
-            <a href={INSTALL_URL} className={btn({ variant: "primary" })}>
+            <a href={GITHUB_APP_INSTALL_URL} className={btn({ variant: "primary" })}>
               Retry install
             </a>
           }
