@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -102,6 +103,32 @@ func List(ctx context.Context, pool *pgxpool.Pool, limit int) ([]Incident, error
 	if err != nil {
 		return nil, fmt.Errorf("query incidents: %w", err)
 	}
+	return scanIncidents(rows)
+}
+
+// ListByRepository returns one repository's incidents, newest first.
+func ListByRepository(ctx context.Context, pool *pgxpool.Pool, repositoryID string, limit int) ([]Incident, error) {
+	if limit <= 0 || limit > 100 {
+		limit = 50
+	}
+
+	rows, err := pool.Query(ctx, `
+		SELECT i.id, i.repository_id, r.owner, r.name, i.commit_sha, i.file_path, i.line_number, i.provider,
+		       i.secret_type, i.fingerprint, i.masked_value, i.resource_ref, i.is_live, i.severity,
+		       i.risk_score, i.risk_factors, i.status, i.simulated, i.created_at, i.resolved_at
+		FROM incidents i
+		LEFT JOIN repositories r ON r.id = i.repository_id
+		WHERE i.repository_id = $1
+		ORDER BY i.created_at DESC
+		LIMIT $2`, repositoryID, limit)
+	if err != nil {
+		return nil, fmt.Errorf("query incidents for repository: %w", err)
+	}
+	return scanIncidents(rows)
+}
+
+// scanIncidents reads rows selected with the column list List uses, and closes them.
+func scanIncidents(rows pgx.Rows) ([]Incident, error) {
 	defer rows.Close()
 
 	var results []Incident

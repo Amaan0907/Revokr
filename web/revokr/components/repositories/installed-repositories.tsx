@@ -44,7 +44,7 @@ export function InstalledRepositories({ repositories }: { repositories: Installe
             <TableRow key={repository.id} columns={COLUMNS} className="py-[13px]">
               <Cell className="overflow-hidden text-ellipsis">
                 <Link
-                  href={`/incidents?q=${encodeURIComponent(name)}`}
+                  href={`/repositories/${repository.id}`}
                   className="font-mono text-[13px] text-[#f5f5f7] hover:underline"
                 >
                   {name}
