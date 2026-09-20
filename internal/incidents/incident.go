@@ -186,7 +186,10 @@ func GetByID(ctx context.Context, pool *pgxpool.Pool, id string) (*Incident, err
 	return &inc, nil
 }
 
-// ResolveRepositoryID finds an existing repository UUID or returns an error.
+// ResolveRepositoryID finds the registered repository's UUID, or returns an error when the
+// repository is not registered. Repositories are registered when the GitHub App is installed
+// on them (see internal/githubapp). It deliberately does not fall back to some other
+// repository: an unregistered repo must not have its incidents attached to someone else's.
 func ResolveRepositoryID(ctx context.Context, pool *pgxpool.Pool, explicitID, owner, name string) (string, error) {
 	if explicitID != "" {
 		return explicitID, nil
@@ -194,17 +197,10 @@ func ResolveRepositoryID(ctx context.Context, pool *pgxpool.Pool, explicitID, ow
 
 	var id string
 	err := pool.QueryRow(ctx, "SELECT id FROM repositories WHERE owner = $1 AND name = $2 LIMIT 1", owner, name).Scan(&id)
-	if err == nil {
-		return id, nil
+	if err != nil {
+		return "", fmt.Errorf("no registered repository for %s/%s: %w", owner, name, err)
 	}
-
-	// Fallback to any configured repository for testing/local setups
-	err = pool.QueryRow(ctx, "SELECT id FROM repositories LIMIT 1").Scan(&id)
-	if err == nil {
-		return id, nil
-	}
-
-	return "", fmt.Errorf("no repository found for %s/%s", owner, name)
+	return id, nil
 }
 
 // RepositoryOwnerName returns a repository's owner and name by ID — the

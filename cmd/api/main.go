@@ -90,7 +90,13 @@ func main() {
 	})
 
 	githubapp.RegisterInstallCallback(r)
-	githubapp.RegisterWebhook(r, githubApp.WebhookSecret, queueClient)
+	// The database can be down at startup (see the connect warning above); without a pool,
+	// installation events are acknowledged but not recorded.
+	var installations githubapp.InstallationStore
+	if pool != nil {
+		installations = &githubapp.PGStore{Pool: pool}
+	}
+	githubapp.RegisterWebhook(r, githubApp.WebhookSecret, queueClient, installations)
 	incidents.RegisterRoutes(r, pool)
 
 	r.Run(":" + port)

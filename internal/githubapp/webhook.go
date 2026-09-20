@@ -71,16 +71,13 @@ func ParsePushEvent(body []byte) (*queue.DetectionJob, error) {
 
 // RegisterWebhook wires POST /webhooks/github, rejecting any request whose
 // HMAC-SHA256 signature doesn't match the App's webhook secret.
-// An optional queue.Client can be passed to automatically enqueue detection jobs.
-func RegisterWebhook(r *gin.Engine, webhookSecret string, q ...*queue.Client) {
-	var queueClient *queue.Client
-	if len(q) > 0 {
-		queueClient = q[0]
-	}
-	r.POST("/webhooks/github", handleWebhook(webhookSecret, queueClient))
+// A non-nil queue.Client enqueues detection jobs for push events; a non-nil store registers
+// installations and their repositories from installation events.
+func RegisterWebhook(r *gin.Engine, webhookSecret string, q *queue.Client, store InstallationStore) {
+	r.POST("/webhooks/github", handleWebhook(webhookSecret, q, store))
 }
 
-func handleWebhook(webhookSecret string, q *queue.Client) gin.HandlerFunc {
+func handleWebhook(webhookSecret string, q *queue.Client, store InstallationStore) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		body, err := io.ReadAll(c.Request.Body)
 		if err != nil {
@@ -118,6 +115,28 @@ func handleWebhook(webhookSecret string, q *queue.Client) gin.HandlerFunc {
 				log.Printf("githubapp: queue not configured, detection job logged: %s/%s at commit %s",
 					job.RepositoryOwner, job.RepositoryName, job.CommitSHA)
 			}
+		case "installation", "installation_repositories":
+			change, err := ParseInstallationEvent(event, body)
+			if err != nil {
+				log.Printf("githubapp: failed to parse %s event: %v", event, err)
+				c.JSON(http.StatusBadRequest, gin.H{"error": "invalid installation payload"})
+				return
+			}
+			if change == nil {
+				break
+			}
+			if store == nil {
+				log.Printf("githubapp: no store configured, %s for installation %d ignored", event, change.InstallationID)
+				break
+			}
+			if err := store.Apply(c.Request.Context(), change); err != nil {
+				// A 500 makes GitHub show the delivery as failed so it can be redelivered.
+				log.Printf("githubapp: failed to apply %s for installation %d: %v", event, change.InstallationID, err)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to record installation"})
+				return
+			}
+			log.Printf("githubapp: recorded %s for installation %d (+%d repos, -%d repos, deleted=%t)",
+				event, change.InstallationID, len(change.Add), len(change.Remove), change.Deleted)
 		default:
 			log.Printf("githubapp: unhandled event type: %s", event)
 		}

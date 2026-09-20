@@ -75,7 +75,7 @@ This section says what works today and what does not. Nothing here is rounded up
 | Approval gate | Works. Rotation only starts from an explicit approve action. |
 | **Simulation mode** | Works end to end on the deployed stack. A simulated incident uses a separate adapter that has no AWS or network code in it. **Simulation is chosen per incident** by the `simulated` flag in the webhook body. The Settings toggle in the dashboard only changes the banner and labels; it does not switch the backend between real and simulated. |
 | **Real AWS IAM rotation** | Code is written (create → validate → deactivate → confirm inactive). **It has not been run through the deployed pipeline**: as of the last infra notes the ECS task role lacks the IAM permissions for it. The code uses whichever role the task runs as and does not itself assume the permissions-boundary role, so the boundary only limits it if the task runs as that role. |
-| **Repository lookup** | An incident attaches to a row that must already exist in `repositories`. If the pushed repo isn't there, the worker falls back to *any* repository, which is unsafe outside a demo (see ARCHITECTURE.md §9). |
+| **Repository lookup and install** | An incident attaches to the `repositories` row whose owner and name match the pushed repo. If there is none, no incident is stored (the finding is only logged, masked). Installing the GitHub App registers the installer, the installation and its repositories from the `installation` and `installation_repositories` webhook events, so the App's webhook must be active and point at the API. Parsing is unit-tested; the database write has **not** been run against a real database or a real install yet. |
 | GitHub Actions secret update | Implemented with libsodium sealed-box encryption. Uses a personal access token, not a GitHub App installation token. There is no read-back verification yet. |
 | AI analyst | Uses **OpenAI (`gpt-4o-mini`)** on sanitized metadata, with a deterministic template fallback. Each analysis reports its `source`. **It does not use Amazon Bedrock** (the Go package is still named `bedrock` from the original plan). |
 | Slack notifications | Optional, one channel, never contains the secret. |
@@ -100,9 +100,11 @@ on the login page. The demo session can only act on simulated incidents.
 The API loads the GitHub App secrets from AWS Secrets Manager at startup, and the worker polls
 an SQS queue, so running both needs AWS credentials, a queue, and the values from
 [.env.example](.env.example). Apply the SQL files in [migrations/](migrations) in order to a
-PostgreSQL database first. They use the golang-migrate naming format. Then insert a `users`, a
-`github_installations` and a `repositories` row for the repository you will push as: nothing in
-the code creates them yet, and without a match the worker does not store the incident.
+PostgreSQL database first. They use the golang-migrate naming format. The repository you push as
+must be registered in `repositories` (matching owner and name), or the worker does not store the
+incident. Installing the GitHub App on it registers it, if the App's webhook points at your API;
+otherwise insert a `users`, a `github_installations`
+and a `repositories` row by hand.
 
 ```bash
 # API (set PORT=8080 so it does not collide with the dashboard's port 3000)

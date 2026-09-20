@@ -27,9 +27,9 @@ func handleInstallCallback(c *gin.Context) {
 	log.Printf("githubapp: install callback received (installation_id=%d, setup_action=%s)",
 		installationID, setupAction)
 
-	// TODO(phase1): persist to github_installations. Needs a resolved
-	// users.id for the FK, which requires a GitHub OAuth login flow that
-	// doesn't exist yet — deferred until that's in place, not skipped.
+	// Nothing is stored here: this redirect carries no signed-in user to satisfy the
+	// github_installations.user_id foreign key. The installation and its repositories are
+	// recorded from the "installation" webhook event instead (see installations.go).
 
 	c.JSON(http.StatusOK, gin.H{
 		"status":          "ok",

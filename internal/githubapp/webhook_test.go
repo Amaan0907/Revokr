@@ -61,3 +61,66 @@ func TestVerifySignature(t *testing.T) {
 		t.Errorf("expected wrong secret to fail")
 	}
 }
+
+func TestParseInstallationEventCreated(t *testing.T) {
+	body := []byte(`{
+		"action": "created",
+		"installation": {"id": 555},
+		"sender": {"id": 9, "login": "octo"},
+		"repositories": [
+			{"name": "app", "full_name": "octo/app"},
+			{"name": "bad", "full_name": "no-slash"}
+		]
+	}`)
+
+	change, err := ParseInstallationEvent("installation", body)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if change.InstallationID != 555 || change.SenderID != 9 || change.SenderLogin != "octo" {
+		t.Errorf("unexpected installer/installation: %+v", change)
+	}
+	if len(change.Add) != 1 || change.Add[0] != (RepoRef{Owner: "octo", Name: "app"}) {
+		t.Errorf("expected only octo/app, got %+v", change.Add)
+	}
+}
+
+func TestParseInstallationEventRepositoriesChanged(t *testing.T) {
+	body := []byte(`{
+		"action": "added",
+		"installation": {"id": 555},
+		"sender": {"id": 9, "login": "octo"},
+		"repositories_added": [{"name": "new", "full_name": "octo/new"}],
+		"repositories_removed": [{"name": "old", "full_name": "octo/old"}]
+	}`)
+
+	change, err := ParseInstallationEvent("installation_repositories", body)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(change.Add) != 1 || change.Add[0].Name != "new" {
+		t.Errorf("expected octo/new added, got %+v", change.Add)
+	}
+	if len(change.Remove) != 1 || change.Remove[0].Name != "old" {
+		t.Errorf("expected octo/old removed, got %+v", change.Remove)
+	}
+}
+
+func TestParseInstallationEventDeletedAndIgnored(t *testing.T) {
+	deleted, err := ParseInstallationEvent("installation", []byte(`{"action":"deleted","installation":{"id":555}}`))
+	if err != nil || deleted == nil || !deleted.Deleted {
+		t.Fatalf("expected a deleted change, got %+v, %v", deleted, err)
+	}
+
+	ignored, err := ParseInstallationEvent("installation", []byte(`{"action":"suspend","installation":{"id":555},"sender":{"id":9}}`))
+	if err != nil || ignored != nil {
+		t.Errorf("suspend should change nothing, got %+v, %v", ignored, err)
+	}
+
+	if _, err := ParseInstallationEvent("installation", []byte(`{"action":"created","sender":{"id":9}}`)); err == nil {
+		t.Error("expected an error when the installation id is missing")
+	}
+	if _, err := ParseInstallationEvent("installation", []byte(`{"action":"created","installation":{"id":1}}`)); err == nil {
+		t.Error("expected an error when the sender is missing")
+	}
+}
