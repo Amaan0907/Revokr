@@ -1,66 +1,283 @@
-import type { ReactNode } from "react";
+import type { ReactNode, SVGProps } from "react";
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
-import { ChevronRight, EyeOff, FlaskConical, Lock, LockKeyhole, Sparkles } from "lucide-react";
+import { ArrowUp, FileKey, FlaskConical, Gauge, ListOrdered, ScrollText, Sparkles } from "lucide-react";
+import { IconBox } from "./icon-box";
 import { Reveal } from "./reveal";
+import { RiskMeter } from "./risk-meter";
 import { SectionHeading } from "./section-heading";
 import { DemoButton } from "@/components/auth/demo-button";
 import { GitHubMark } from "@/components/icons/github-mark";
+import { AwsMark, GoogleCloudMark, OpenAiMark, SlackMark, StripeMark } from "@/components/icons/provider-marks";
 import { CountUp } from "@/components/motion/count-up";
-import { WipeIn } from "@/components/motion/wipe-in";
-import { IconTile, type TileColor } from "@/components/shell/icon-tile";
-import { Logo, LogoMark } from "@/components/shell/logo";
-import { buttonVariants } from "@/components/ui/button";
+import { Logo } from "@/components/shell/logo";
+import { HoverButtonContent, hoverButtonVariants } from "@/components/ui/hover-button";
 import { cn } from "@/lib/utils";
 
-const DETECTS = ["AWS", "GitHub", "OpenAI", "Stripe", "Slack", "Google Cloud"];
+// The page is a bordered column: sections are divided by hairlines, and grids draw their cell
+// borders with a 1px gap over a line-coloured background, so neighbouring cells share one line.
+const LINE = "border-white/[0.08]";
+const GRID = "grid gap-px bg-white/[0.08]";
+const CELL = "bg-black/60 p-5 sm:p-6";
+const MONO_LABEL = "font-mono text-[11px] uppercase tracking-[0.08em] text-muted-foreground";
+
+// The AWS mark is a wide wordmark that would look tiny at the shared icon size, so it gets its own.
+const DETECTS: { name: string; Mark: (props: SVGProps<SVGSVGElement>) => ReactNode; markClass?: string }[] = [
+  { name: "AWS", Mark: AwsMark, markClass: "size-14" },
+  { name: "GitHub", Mark: GitHubMark },
+  { name: "OpenAI", Mark: OpenAiMark },
+  { name: "Stripe", Mark: StripeMark },
+  { name: "Slack", Mark: SlackMark },
+  { name: "Google Cloud", Mark: GoogleCloudMark },
+];
+
+// The strip is one long belt that slides left forever. It holds four copies of the list and moves
+// by half its length (two copies), so the frame it ends on is identical to the one it starts from
+// and the loop has no seam. Two copies are enough to fill the window and the other two are what
+// the belt slides into, so there is never a gap at the right. Only the first copy is read by
+// screen readers.
+const BELT_COPIES = 4;
 
 export function ProviderStrip() {
   return (
-    <section aria-label="Supported providers" className="mx-auto max-w-6xl px-4 sm:px-6">
-      <Reveal className="flex flex-col items-center gap-6 border-y border-white/[0.06] py-10 text-center">
-        <p className="text-[13px] font-medium text-muted-foreground">Detects leaked keys from</p>
-        <ul className="flex flex-wrap items-center justify-center gap-x-10 gap-y-3">
-          {DETECTS.map((provider) => (
-            <li
-              key={provider}
-              className="text-xl font-semibold tracking-[-0.025em] text-foreground/40 transition-colors duration-300 hover:text-foreground"
-            >
-              {provider}
-            </li>
-          ))}
-        </ul>
-        <p className="text-[13px] text-muted-foreground">
-          and rotates <span className="text-foreground">AWS IAM keys</span> and{" "}
-          <span className="text-foreground">GitHub Actions secrets</span> for you.
-        </p>
-      </Reveal>
+    <section aria-label="Supported providers" className={cn("border-b py-8", LINE)}>
+      <div className="mx-auto w-[90vw]">
+        <p className={MONO_LABEL}>Detects leaks from</p>
+        <div
+          className={cn(
+            "group mt-4 overflow-hidden rounded-2xl border bg-black/60 mask-[linear-gradient(to_right,transparent,black_6%,black_94%,transparent)]",
+            LINE,
+          )}
+        >
+          <div className="flex w-max animate-marquee group-hover:paused">
+            {Array.from({ length: BELT_COPIES }, (_, copy) => (
+              <ul key={copy} aria-hidden={copy > 0 || undefined} className="flex shrink-0">
+                {DETECTS.map(({ name, Mark, markClass }) => (
+                  <li
+                    key={name}
+                    className={cn(
+                      "flex h-36 w-44 flex-col items-center justify-center gap-1 border-r text-[15px] font-semibold tracking-[-0.02em] text-foreground sm:w-56",
+                      LINE,
+                    )}
+                  >
+                    <span className="grid h-14 place-items-center">
+                      <Mark className={cn("size-9 shrink-0", markClass)} />
+                    </span>
+                    {name}
+                  </li>
+                ))}
+              </ul>
+            ))}
+          </div>
+        </div>
+      </div>
     </section>
   );
 }
 
-const FACTS: { value: number; from?: number; label: string; body: string }[] = [
-  { value: 6, label: "providers detected", body: "AWS, GitHub, OpenAI, Stripe, Slack and Google Cloud keys." },
-  { value: 5, label: "steps, fixed order", body: "The replacement comes first. The leaked key goes last." },
-  { value: 1, label: "click to approve", body: "Nothing touches a live credential without a person." },
-  { value: 0, from: 99, label: "raw secrets stored", body: "Only masked values and fingerprints, anywhere." },
+// A plain ease-out: slow enough that 0 to 6 is seen passing through 1, 2, 3.
+const COUNT_EASE = [0.33, 1, 0.68, 1] as const;
+
+// Every figure counts up from 0 to its value when it scrolls into view.
+const FACTS: { value: number; label: string }[] = [
+  { value: 6, label: "providers detected" },
+  { value: 5, label: "steps, fixed order" },
+  { value: 1, label: "click to approve" },
+  { value: 0, label: "raw secrets stored" },
 ];
 
 export function Numbers() {
   return (
-    <section
-      aria-label="Revokr in numbers"
-      className="border-y border-white/[0.07] bg-white/[0.025] shadow-[inset_0_1px_0_rgb(255_255_255/0.04)]"
+    <section aria-label="Revokr in numbers" className={cn("border-b py-8", LINE)}>
+      <ul className={cn(GRID, "mx-auto w-[90vw] grid-cols-2 overflow-hidden rounded-2xl border lg:grid-cols-4", LINE)}>
+        {FACTS.map((fact) => (
+          <li key={fact.label} className={CELL}>
+            <p className="text-[length:clamp(1.75rem,3vw,2.25rem)] font-semibold leading-none tracking-[-0.04em] tabular-nums text-silver">
+              <CountUp value={fact.value} duration={2} ease={COUNT_EASE} />
+            </p>
+            <p className="mt-2 text-[13px] text-muted-foreground">{fact.label}</p>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+// A small terminal-style readout: the same monospace treatment for every snippet.
+function Terminal({ children }: { children: ReactNode }) {
+  return (
+    <div
+      aria-hidden
+      className={cn(
+        "overflow-hidden rounded-md border bg-white/[0.02] p-2.5 font-mono text-xs leading-5 text-muted-foreground",
+        LINE,
+      )}
     >
-      <ul className="mx-auto grid max-w-6xl grid-cols-2 gap-x-6 gap-y-14 px-4 py-24 sm:px-6 lg:grid-cols-4">
-        {FACTS.map((fact, i) => (
-          <li key={fact.label}>
-            <Reveal delay={i * 0.08}>
-              <p className="text-[length:clamp(3.5rem,7vw,5.5rem)] font-semibold leading-none tracking-[-0.05em] tabular-nums text-silver">
-                <CountUp value={fact.value} from={fact.from} />
-              </p>
-              <p className="mt-4 text-[17px] font-semibold tracking-[-0.015em]">{fact.label}</p>
-              <p className="mt-1 max-w-60 text-[15px] leading-relaxed text-muted-foreground">{fact.body}</p>
+      {children}
+    </div>
+  );
+}
+
+const ROTATION: { done: boolean; step: string; note: string }[] = [
+  { done: true, step: "validate", note: "AKIA…7QXM is live" },
+  { done: true, step: "create", note: "replacement key tested" },
+  { done: true, step: "update", note: "GitHub Actions secret" },
+  { done: false, step: "disable", note: "old key, last" },
+];
+
+const AUDIT = [
+  { at: "14:02:11", action: "detected" },
+  { at: "14:02:21", action: "approved" },
+  { at: "14:02:24", action: "gh_secret_updated" },
+  { at: "14:02:26", action: "verified" },
+];
+
+interface BentoCard {
+  icon: LucideIcon;
+  title: string;
+  body: string;
+  // Grid placement only: the card fills whatever cell it is given.
+  className?: string;
+  visual: ReactNode;
+}
+
+// One row of a step list: a status dot, the step name, then a short note.
+function RotationSteps() {
+  return (
+    <ol aria-hidden className="mt-auto divide-y divide-white/[0.06] pt-4 font-mono text-xs lg:text-[13px]">
+      {ROTATION.map((row) => (
+        <li key={row.step} className="flex items-center gap-3 py-3 lg:gap-4 lg:py-4">
+          <span
+            className={cn(
+              "grid size-5 shrink-0 place-items-center rounded-full border text-[10px]",
+              row.done
+                ? "border-resolved/40 bg-resolved/10 text-resolved"
+                : "border-white/15 text-muted-foreground/60",
+            )}
+          >
+            {row.done ? "✓" : "○"}
+          </span>
+          <span className="w-16 shrink-0 text-foreground lg:w-20">{row.step}</span>
+          <span className="truncate text-muted-foreground">{row.note}</span>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+const BENTO: BentoCard[] = [
+  {
+    icon: ListOrdered,
+    title: "Safe rotation order",
+    body: "Replacement first. Old key last.",
+    className: "md:col-span-2 lg:row-span-2",
+    visual: <RotationSteps />,
+  },
+  {
+    icon: Gauge,
+    title: "Risk scoring",
+    body: "Every leak scored 0 to 100.",
+    visual: (
+      <div aria-hidden className="mt-auto pt-3">
+        <RiskMeter score={96} />
+      </div>
+    ),
+  },
+  {
+    icon: Sparkles,
+    title: "AI analyst",
+    body: "Plain-English summary, no secrets sent.",
+    visual: (
+      <div aria-hidden className="mt-auto pt-3">
+        <p
+          className={cn(
+            "rounded-md border bg-white/[0.02] p-3 text-xs leading-5 text-muted-foreground",
+            LINE,
+          )}
+        >
+          A live AWS key was pushed to a public repo. Rotate it now.
+        </p>
+      </div>
+    ),
+  },
+  {
+    icon: ScrollText,
+    title: "Audit trail",
+    body: "Every step logged, with who and when.",
+    className: "md:col-span-2",
+    visual: (
+      <div aria-hidden className="mt-auto pt-3">
+        <Terminal>
+          {AUDIT.map((row) => (
+            <div key={row.action} className="grid grid-cols-[4.5rem_minmax(0,1fr)] gap-x-3">
+              <span className="text-muted-foreground/70">{row.at}</span>
+              <span className={cn("truncate", row.action === "verified" ? "text-resolved" : "text-foreground")}>
+                {row.action}
+              </span>
+            </div>
+          ))}
+        </Terminal>
+      </div>
+    ),
+  },
+  {
+    icon: FileKey,
+    title: "GitHub Actions sync",
+    body: "New keys written straight to secrets.",
+    className: "md:col-span-1 lg:col-span-2",
+    visual: (
+      <div aria-hidden className="mt-auto pt-3">
+        <Terminal>
+          <div className="truncate text-foreground">secrets.AWS_ACCESS_KEY_ID</div>
+          <div className="truncate">
+            ••••••••••••7QXM <span className="text-resolved">✓ updated</span>
+          </div>
+        </Terminal>
+      </div>
+    ),
+  },
+  {
+    icon: FlaskConical,
+    title: "Simulation mode",
+    body: "Rehearse without touching real keys.",
+    className: "md:col-span-1 lg:col-span-2",
+    visual: (
+      <div aria-hidden className="mt-auto flex items-center gap-3 pt-3">
+        <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] py-1 pl-2.5 pr-3 text-xs text-foreground">
+          <span className="size-1.5 rounded-full bg-resolved" />
+          Simulation on
+        </span>
+        <span className="font-mono text-xs text-muted-foreground">0 keys changed</span>
+      </div>
+    ),
+  },
+];
+
+// A bento grid: rounded cards of different sizes, so the eye lands on rotation first and the
+// smaller ideas sit around it. Two columns on tablets, four on desktop.
+//
+// On desktop the section is exactly one screen tall: the heading takes what it needs and the
+// three grid rows share the rest, so the whole grid is in view at once. Rows never get shorter
+// than their content needs, so on a very short window the section grows instead of clipping.
+export function Features() {
+  return (
+    <section id="features" className={cn("border-b lg:flex lg:min-h-dvh lg:flex-col", LINE)}>
+      {/* The heading and the grid share one 90vw column, centred on the screen. */}
+      <div className="mx-auto w-[90vw] pb-6 pt-12">
+        <SectionHeading eyebrow="Capabilities" title="Everything after the alert." />
+      </div>
+      <ul className="mx-auto grid w-[90vw] gap-4 pb-12 md:grid-cols-2 lg:flex-1 lg:grid-cols-4 lg:grid-rows-[repeat(3,minmax(14.5rem,1fr))]">
+        {BENTO.map((card, i) => (
+          <li key={card.title} className={cn("min-w-0", card.className)}>
+            <Reveal delay={(i % 3) * 0.08} y={20} className="h-full">
+              <article className="flex h-full flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4 shadow-[inset_0_1px_0_rgb(255_255_255/0.05)] transition-colors duration-300 hover:border-white/15 hover:bg-white/[0.04] sm:p-5">
+                <div className="flex items-center gap-3">
+                  <IconBox icon={card.icon} />
+                  <h3 className="text-[15px] font-semibold tracking-[-0.015em]">{card.title}</h3>
+                </div>
+                <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">{card.body}</p>
+                {card.visual}
+              </article>
             </Reveal>
           </li>
         ))}
@@ -69,361 +286,50 @@ export function Numbers() {
   );
 }
 
-function Tile({
-  title,
-  body,
-  children,
-  delay = 0,
-  glow = false,
-  className,
-}: {
-  title: ReactNode;
-  body: string;
-  children?: ReactNode;
-  delay?: number;
-  glow?: boolean;
-  className?: string;
-}) {
+export function FinalCta() {
   return (
-    <Reveal
-      delay={delay}
-      className={cn("surface relative flex flex-col overflow-hidden rounded-[28px] p-7 sm:p-9", className)}
-    >
-      {glow && (
-        <>
-          <div
-            aria-hidden
-            className="glow-soft pointer-events-none absolute -top-32 left-1/2 h-64 w-full -translate-x-1/2 opacity-25"
-          />
-          <div
-            aria-hidden
-            className="glow-fill glow-ring animate-glow-spin pointer-events-none absolute inset-0 rounded-[inherit] opacity-60"
-          />
-        </>
-      )}
-      <div className="relative flex flex-1 flex-col">
-        <h3 className="max-w-md text-[length:clamp(1.375rem,2.2vw,1.75rem)] font-semibold leading-[1.12] tracking-[-0.03em] text-balance">
-          {title}
-        </h3>
-        <p className="mt-3 max-w-md text-[15px] leading-relaxed text-muted-foreground">{body}</p>
-        {children && <div className="mt-8 flex flex-1 flex-col justify-end">{children}</div>}
-      </div>
-    </Reveal>
-  );
-}
-
-const ORDER = ["Validate", "Approve", "Replace", "Update secret", "Disable old", "Verify"];
-
-const RISK_SEGMENTS = [
-  { label: "Live", points: 40, shade: "opacity-100" },
-  { label: "Public", points: 25, shade: "opacity-75" },
-  { label: "Prod access", points: 20, shade: "opacity-55" },
-  { label: "Recent", points: 11, shade: "opacity-35" },
-];
-
-const AUDIT = [
-  { at: "14:02:11", action: "detected", actor: "gitleaks" },
-  { at: "14:02:12", action: "validated", actor: "aws-adapter" },
-  { at: "14:02:12", action: "risk_scored", actor: "revokr" },
-  { at: "14:02:21", action: "approved", actor: "you" },
-  { at: "14:02:23", action: "key_created", actor: "aws-adapter" },
-  { at: "14:02:24", action: "gh_secret_updated", actor: "github-adapter" },
-  { at: "14:02:25", action: "old_key_disabled", actor: "aws-adapter" },
-  { at: "14:02:26", action: "verified", actor: "verifier" },
-];
-
-const REPO_SECRETS = [
-  { name: "AWS_ACCESS_KEY_ID", fresh: true },
-  { name: "AWS_SECRET_ACCESS_KEY", fresh: true },
-  { name: "NPM_TOKEN", fresh: false },
-];
-
-export function Features() {
-  return (
-    <section id="features" className="mx-auto max-w-6xl px-4 py-28 sm:px-6 sm:py-36">
-      <SectionHeading
-        eyebrow="Features"
-        title={
-          <>
-            Built for the minutes <span className="text-muted-foreground">after a leak.</span>
-          </>
-        }
-        description="Everything a team needs to go from alert to closed incident, without writing a runbook first."
-      />
-
-      <div className="mt-16 grid gap-4 md:grid-cols-2 lg:mt-20 lg:grid-cols-6">
-        <Tile
-          className="md:col-span-2 lg:col-span-4"
-          title={
-            <>
-              A safe rotation order. <span className="text-link">Enforced.</span>
-            </>
-          }
-          body="Revokr never disables a leaked key until its replacement has been created, deployed and tested. If any step fails, the old key stays put and you're told why."
-        >
-          <ol aria-label="Rotation order" className="flex flex-wrap items-center gap-x-1.5 gap-y-2.5">
-            {ORDER.map((step, i) => (
-              <li key={step} className="flex items-center gap-1.5">
-                <span
-                  className="animate-chain rounded-full px-3.5 py-1.5 text-[13px] font-medium"
-                  style={{ animationDelay: `${i}s` }}
-                >
-                  {step}
-                </span>
-                {i < ORDER.length - 1 && (
-                  <ChevronRight aria-hidden className="size-3.5 text-muted-foreground/50" />
-                )}
-              </li>
-            ))}
-          </ol>
-        </Tile>
-
-        <Tile
-          className="lg:col-span-2"
-          delay={0.08}
-          title="Risk you can read."
-          body="Every score is the sum of named factors. No black box."
-        >
-          <div aria-hidden>
-            <p className="flex items-baseline gap-1.5">
-              <span className="text-6xl font-semibold tracking-[-0.05em] text-critical tabular-nums">
-                <CountUp value={96} />
-              </span>
-              <span className="text-[15px] text-muted-foreground">/ 100</span>
-            </p>
-            <WipeIn className="mt-4 flex h-2.5 gap-[3px] text-critical" delay={0.2}>
-              {RISK_SEGMENTS.map((segment) => (
-                <span
-                  key={segment.label}
-                  className={cn("h-full rounded-full bg-current", segment.shade)}
-                  style={{ width: `${segment.points}%` }}
-                />
-              ))}
-            </WipeIn>
-            <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-              {RISK_SEGMENTS.map((segment) => (
-                <li key={segment.label}>
-                  {segment.label} <span className="tabular-nums text-foreground">+{segment.points}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </Tile>
-
-        <Tile
-          className="lg:col-span-3"
-          glow
-          title={
-            <>
-              An analyst that <span className="text-spectrum">never sees the secret.</span>
-            </>
-          }
-          body="Amazon Bedrock explains what leaked, why it matters and what to do next, working from sanitized metadata only."
-        >
-          <div aria-hidden className="rounded-2xl bg-black/60 p-4 ring-1 ring-white/10">
-            <p className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-              <Sparkles className="size-3.5 text-simulation" />
-              Amazon Bedrock
-            </p>
-            <p className="mt-2 text-sm leading-relaxed">
-              A live AWS key with production access was pushed to a public repository three minutes
-              ago. Approve the rotation now; the replacement is ready.
-            </p>
-            <p className="mt-3 text-xs text-shimmer">The secret was removed before the prompt was built.</p>
-          </div>
-        </Tile>
-
-        <Tile
-          className="lg:col-span-3"
-          delay={0.08}
-          title="Every step, on the record."
-          body="Detections, approvals and each rotation step are logged with who did it and exactly when."
-        >
-          <div
-            aria-hidden
-            className="overflow-hidden rounded-2xl bg-black/60 py-3 font-mono text-xs leading-6 ring-1 ring-white/10 [mask-image:linear-gradient(to_bottom,black_65%,transparent)]"
-          >
-            {AUDIT.map((row) => (
-              <div key={row.action} className="grid grid-cols-[auto_minmax(0,1fr)_auto] gap-4 px-4">
-                <span className="text-muted-foreground/70">{row.at}</span>
-                <span className={cn("truncate", row.action === "verified" ? "text-resolved" : "text-foreground")}>
-                  {row.action}
-                </span>
-                <span className="text-muted-foreground">{row.actor}</span>
-              </div>
-            ))}
-          </div>
-        </Tile>
-
-        <Tile
-          className="lg:col-span-2"
-          title="Straight into GitHub Actions."
-          body="The new key is sealed with your repository's public key and written into Actions secrets."
-        >
-          <div aria-hidden className="overflow-hidden rounded-2xl bg-black/60 ring-1 ring-white/10">
-            <p className="border-b border-white/[0.06] px-4 py-2.5 text-xs font-medium text-muted-foreground">
-              Repository secrets
-            </p>
-            <ul className="divide-y divide-white/[0.06]">
-              {REPO_SECRETS.map((secret) => (
-                <li key={secret.name} className="flex items-center gap-2.5 px-4 py-2.5 text-xs">
-                  <Lock className="size-3.5 shrink-0 text-muted-foreground" />
-                  <span className="min-w-0 flex-1 truncate font-mono">{secret.name}</span>
-                  {secret.fresh ? (
-                    <span className="flex shrink-0 items-center gap-1.5 text-resolved">
-                      <span className="size-1.5 rounded-full bg-resolved shadow-[0_0_6px_var(--resolved)]" />
-                      Updated now
-                    </span>
-                  ) : (
-                    <span className="shrink-0 text-muted-foreground">3 months ago</span>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </Tile>
-
-        <Tile
-          className="lg:col-span-2"
-          delay={0.08}
-          title={
-            <>
-              Rehearse it. <span className="text-simulation">Risk nothing.</span>
-            </>
-          }
-          body="Simulation mode plays the whole flow end to end without touching a real credential."
-        >
-          <div aria-hidden className="flex items-center gap-3 rounded-2xl bg-black/60 px-4 py-3 ring-1 ring-white/10">
-            <IconTile icon={FlaskConical} color="purple" size="md" />
-            <span className="flex-1 text-sm font-medium">Simulation mode</span>
-            <span className="relative h-[31px] w-[51px] shrink-0 rounded-full bg-resolved">
-              <span className="absolute right-0.5 top-0.5 size-[27px] rounded-full bg-white shadow-[0_2px_6px_rgb(0_0_0/0.35)]" />
-            </span>
-          </div>
-        </Tile>
-
-        <Tile
-          className="md:col-span-2 lg:col-span-2"
-          delay={0.16}
-          title="Your team hears it first."
-          body="Every incident ends with a short summary posted to your security channel."
-        >
-          <div aria-hidden className="flex gap-3 rounded-2xl bg-black/60 p-3.5 text-left ring-1 ring-white/10">
-            <LogoMark className="size-9 rounded-[10px]" />
-            <div className="min-w-0 text-sm">
-              <p className="font-semibold">
-                Revokr <span className="font-normal text-muted-foreground">· #security</span>
-              </p>
-              <p className="mt-0.5 leading-snug text-foreground/80">
-                Rotated an AWS key in acme/payments-api. The leaked one is confirmed dead.
-              </p>
-            </div>
-          </div>
-        </Tile>
-      </div>
-    </section>
-  );
-}
-
-const PROMISES: { icon: LucideIcon; color: TileColor; title: string; body: string }[] = [
-  {
-    icon: EyeOff,
-    color: "indigo",
-    title: "Raw secrets are never stored",
-    body: "Only masked values and fingerprints reach the database, logs, notifications or this dashboard.",
-  },
-  {
-    icon: LockKeyhole,
-    color: "blue",
-    title: "Least-privilege by design",
-    body: "Rotation runs as a dedicated IAM identity capped by a permissions boundary. Never an admin.",
-  },
-  {
-    icon: Lock,
-    color: "green",
-    title: "Encrypted at rest",
-    body: "GitHub App keys and webhook secrets live in AWS Secrets Manager, encrypted with KMS.",
-  },
-  {
-    icon: Sparkles,
-    color: "purple",
-    title: "Sanitized before AI",
-    body: "Bedrock only sees a whitelisted view of each incident. The secret is dropped before the prompt is built.",
-  },
-];
-
-export function SecuritySection() {
-  return (
-    <section id="security" className="relative isolate border-t border-white/[0.07]">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-1/3 -z-10 mx-auto h-96 max-w-4xl rounded-full bg-[radial-gradient(closest-side,rgb(94_92_230/0.22),transparent)]"
-      />
-      <div className="mx-auto max-w-6xl px-4 py-28 sm:px-6 sm:py-36">
-        <SectionHeading
-          eyebrow="Security"
-          title={
-            <>
-              Built to handle secrets. <span className="text-muted-foreground">Never to keep them.</span>
-            </>
-          }
-          description="Revokr is designed so the secret it's protecting you from is never written down in readable form, anywhere in the system."
-        />
-        <ul className="mt-16 grid gap-4 sm:grid-cols-2 lg:mt-20 lg:grid-cols-4">
-          {PROMISES.map((promise, i) => (
-            <li key={promise.title}>
-              <Reveal delay={i * 0.08} className="surface h-full rounded-[28px] p-7">
-                <IconTile icon={promise.icon} color={promise.color} size="lg" />
-                <h3 className="mt-6 text-[19px] font-semibold leading-snug tracking-[-0.02em]">
-                  {promise.title}
-                </h3>
-                <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">{promise.body}</p>
-              </Reveal>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </section>
-  );
-}
-
-export function FinalCta({ signedIn }: { signedIn: boolean }) {
-  return (
-    <section className="relative isolate overflow-hidden px-4 py-32 text-center sm:px-6 sm:py-44">
-      <div
-        aria-hidden
-        className="glow-soft pointer-events-none absolute left-1/2 top-1/2 -z-10 h-[28rem] w-[min(64rem,100vw)] -translate-x-1/2 -translate-y-1/2 opacity-30"
-      />
-      <Reveal>
-        <h2 className="mx-auto max-w-4xl text-[length:clamp(2.5rem,7vw,5.25rem)] font-semibold leading-[1.02] tracking-[-0.05em] text-balance">
-          <span className="text-silver">Your next leak is already on its way.</span>{" "}
-          <span className="text-spectrum">Be ready.</span>
+    <section className={cn("relative border-b", LINE)}>
+      <Reveal className="mx-auto flex w-[90vw] max-w-6xl flex-col items-center py-20 text-center lg:py-28">
+        <h2 className="text-balance text-[length:clamp(2.25rem,6vw,5rem)] font-semibold leading-[1.02] tracking-[-0.045em] text-silver">
+          Ready before the next leak.
         </h2>
-        <p className="mx-auto mt-6 max-w-xl text-[length:clamp(1.0625rem,1.8vw,1.25rem)] leading-relaxed text-muted-foreground">
-          Connect a repository in about a minute, or rehearse the whole flow in the live demo first.
+        <p className="mt-5 text-[length:clamp(1rem,1.6vw,1.25rem)] text-muted-foreground">
+          Connect a repository in about a minute.
         </p>
-        <div className="mt-10 flex flex-col items-center justify-center gap-5 sm:flex-row sm:gap-7">
-          {signedIn ? (
-            <Link href="/dashboard" className={buttonVariants({ size: "xl" })}>
-              Open your dashboard
-            </Link>
-          ) : (
-            <>
-              <Link href="/signup" className={buttonVariants({ size: "xl" })}>
-                <GitHubMark className="size-[18px]" />
-                Sign up with GitHub
-              </Link>
-              <DemoButton className="group inline-flex cursor-pointer items-center gap-1 rounded-sm text-[17px] text-link underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-ring">
-                Try the live demo
-                <ChevronRight
-                  aria-hidden
-                  className="size-4 transition-transform duration-200 group-hover:translate-x-0.5"
-                />
-              </DemoButton>
-            </>
-          )}
+        <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
+          <Link href="/signup" className={hoverButtonVariants({ size: "hero" })}>
+            <HoverButtonContent>
+              <GitHubMark className="size-5" />
+              Sign up with GitHub
+            </HoverButtonContent>
+          </Link>
+          <DemoButton className={hoverButtonVariants({ variant: "outline", size: "hero" })}>
+            <HoverButtonContent>Try the demo</HoverButtonContent>
+          </DemoButton>
         </div>
       </Reveal>
+
+      {/* Beside the headline, on the page's right margin. It sits outside <Reveal /> because that
+          moves as it fades in, and a moving parent would carry the button with it. The hero carries
+          the id "home"; the page's smooth scrolling glides to it, and without that it is an
+          ordinary jump to the top. */}
+      <a
+        href="#home"
+        aria-label="Back to top"
+        title="Back to top"
+        className="group absolute bottom-6 right-[5vw] grid size-11 place-items-center overflow-hidden rounded-full border border-white/15 bg-white/[0.02] text-foreground transition-colors duration-200 ease-in-out hover:border-primary hover:bg-primary hover:text-primary-foreground focus-visible:border-primary focus-visible:bg-primary focus-visible:text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transition-none lg:bottom-auto lg:top-1/2 lg:-translate-y-1/2"
+      >
+        {/* On hover the arrow leaves through the top as a second one rises in from below, and the
+            colours flip, in the same spirit as the other buttons. */}
+        <ArrowUp
+          aria-hidden
+          className="col-start-1 row-start-1 size-[18px] transition-transform duration-200 ease-in-out group-hover:-translate-y-11 group-focus-visible:-translate-y-11 motion-reduce:transition-none"
+        />
+        <ArrowUp
+          aria-hidden
+          className="col-start-1 row-start-1 size-[18px] translate-y-11 transition-transform duration-200 ease-in-out group-hover:translate-y-0 group-focus-visible:translate-y-0 motion-reduce:transition-none"
+        />
+      </a>
     </section>
   );
 }
@@ -432,8 +338,8 @@ const FOOTER_LINKS: { title: string; links: { label: string; href: string; exter
   {
     title: "Product",
     links: [
-      { label: "How it works", href: "#how-it-works" },
-      { label: "Features", href: "#features" },
+      { label: "Workflow", href: "#how-it-works" },
+      { label: "Capabilities", href: "#features" },
       { label: "Security", href: "#security" },
     ],
   },
@@ -455,8 +361,11 @@ const FOOTER_LINK =
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-white/[0.06]">
-      <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
+    <footer className="relative isolate overflow-hidden py-10">
+      {/* The page's own arc has faded by the time you reach here, so the footer draws its own,
+          kept faint so the text on top stays readable. */}
+      <div aria-hidden className="bg-mono-arc pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-[46rem] opacity-30" />
+      <div className="mx-auto w-[90vw]">
         <div className="grid gap-10 sm:grid-cols-2 md:grid-cols-[1.6fr_1fr_1fr_1fr]">
           <div>
             <Logo />
@@ -495,7 +404,12 @@ export function SiteFooter() {
             </nav>
           ))}
         </div>
-        <div className="mt-12 flex flex-col gap-2 border-t border-white/[0.06] pt-6 text-xs text-muted-foreground sm:flex-row sm:justify-between">
+        <div
+          className={cn(
+            "mt-10 flex flex-col gap-2 border-t pt-6 text-xs text-muted-foreground sm:flex-row sm:justify-between",
+            LINE,
+          )}
+        >
           <p>Copyright © {new Date().getFullYear()} Revokr. All rights reserved.</p>
           <p>Raw secrets are never stored, logged or shown.</p>
         </div>

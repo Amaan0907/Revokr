@@ -11,7 +11,7 @@ const buttonVariants = cva(
       variant: {
         default:
           "bg-primary text-primary-foreground shadow-[inset_0_1px_0_rgb(255_255_255/0.9),inset_0_-1px_0_rgb(0_0_0/0.12),0_6px_20px_-8px_rgb(255_255_255/0.35)] hover:bg-primary/85",
-        tint: "bg-tint text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.3),0_6px_20px_-8px_rgb(10_132_255/0.6)] hover:bg-tint/85",
+        tint: "bg-tint text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.2)] hover:bg-tint/85",
         outline:
           "border-white/15 bg-white/[0.02] text-foreground hover:bg-white/[0.07] aria-expanded:bg-white/[0.07]",
         secondary:
@@ -28,7 +28,9 @@ const buttonVariants = cva(
         xs: "h-6 gap-1 px-2.5 text-xs has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2 [&_svg:not([class*='size-'])]:size-3",
         sm: "h-8 gap-1.5 px-3.5 text-[13px] has-data-[icon=inline-end]:pr-2.5 has-data-[icon=inline-start]:pl-2.5 [&_svg:not([class*='size-'])]:size-3.5",
         lg: "h-11 gap-2 px-6 text-[15px] has-data-[icon=inline-end]:pr-5 has-data-[icon=inline-start]:pl-5",
-        xl: "h-13 gap-2 px-7 text-[17px] has-data-[icon=inline-end]:pr-6 has-data-[icon=inline-start]:pl-6 [&_svg:not([class*='size-'])]:size-[18px]",
+        xl: "h-11 gap-2 px-6 text-[15px] has-data-[icon=inline-end]:pr-5 has-data-[icon=inline-start]:pl-5 [&_svg:not([class*='size-'])]:size-4",
+        // The landing page's headline actions: xl, 20% larger.
+        hero: "h-13 gap-2.5 px-7 text-[18px] has-data-[icon=inline-end]:pr-6 has-data-[icon=inline-start]:pl-6 [&_svg:not([class*='size-'])]:size-5",
         icon: "size-9",
         "icon-xs": "size-6 [&_svg:not([class*='size-'])]:size-3",
         "icon-sm": "size-8",

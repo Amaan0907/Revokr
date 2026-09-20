@@ -113,3 +113,37 @@ export interface IncidentDetail {
   auditLog: AuditLogEntry[];
   analysis: Analysis | null;
 }
+
+// GET /api/repositories. `enabled` is the opt-in: pushes are only scanned where it is on.
+export interface Repository {
+  id: string;
+  owner: string;
+  name: string;
+  isPrivate: boolean;
+  // PATCH /api/repositories/:id { is_production } adds +20 to an incident's risk score.
+  isProduction: boolean;
+  enabled: boolean;
+  lastPushAt: string | null;
+}
+
+export interface GitHubInstallation {
+  installationId: number;
+  installedBy: string;
+  organization: string;
+}
+
+// What Revokr can do once it has detected a secret for a provider.
+export type RemediationSupport = "full" | "conditional" | "optional" | "manual";
+
+export interface ProviderCoverage {
+  provider: Provider;
+  name: string;
+  secretTypes: string;
+  remediation: RemediationSupport;
+  note: string;
+}
+
+export type NotifyChannel = "slack" | "discord";
+
+// How an incident that Revokr did not rotate itself was closed.
+export type Resolution = "manual" | "false_positive";

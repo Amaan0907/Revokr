@@ -33,7 +33,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={cn("dark h-full antialiased", geistSans.variable, geistMono.variable)}
     >
-      <body className="min-h-dvh font-sans">
+      {/* Browser extensions (ColorZilla adds cz-shortcut-listen) tag <body> before React hydrates,
+          which React would otherwise report as a mismatch. This only covers <body>'s own attributes. */}
+      <body className="min-h-dvh font-sans" suppressHydrationWarning>
         <MotionProvider>{children}</MotionProvider>
         <GlassLight />
         <SmoothScroll />

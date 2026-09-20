@@ -1,60 +1,33 @@
 "use client";
 
-import { useEffect, useRef, useSyncExternalStore } from "react";
+import { useEffect, useRef } from "react";
 import Form from "next/form";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion } from "framer-motion";
-import { LayoutGrid, LogOut, Search, ShieldAlert } from "lucide-react";
-import { IconTile } from "./icon-tile";
-import { Logo } from "./logo";
 import { UserAvatar } from "./user-avatar";
 import type { SessionMode, SessionUser } from "@/lib/session";
 import { cn } from "@/lib/utils";
 
 const NAV = [
-  { href: "/dashboard", label: "Overview", icon: LayoutGrid, color: "blue" },
-  { href: "/incidents", label: "Incidents", icon: ShieldAlert, color: "red" },
+  { href: "/dashboard", label: "Overview", glyph: "◫" },
+  { href: "/incidents", label: "Incidents", glyph: "◆" },
+  { href: "/repositories", label: "Repositories", glyph: "◲" },
+  { href: "/audit", label: "Audit log", glyph: "≡" },
+  { href: "/settings", label: "Settings", glyph: "⚙" },
 ] as const;
 
 export interface SidebarProps {
   user: SessionUser;
   mode: SessionMode;
-  organization: string;
-  repositoryCount: number;
   needsAttention: number;
-  simulation: boolean;
-  onNavigate?: () => void;
 }
 
-const noSubscribe = () => () => {};
-
-// Shows ⌘K on Apple devices and Ctrl K elsewhere, without a hydration mismatch.
-function useIsApple() {
-  return useSyncExternalStore(
-    noSubscribe,
-    () => /Mac|iPhone|iPad/.test(navigator.userAgent),
-    () => true,
-  );
-}
-
-export function Sidebar({
-  user,
-  mode,
-  organization,
-  repositoryCount,
-  needsAttention,
-  simulation,
-  onNavigate,
-}: SidebarProps) {
+// A flat rail on desktop; on a phone it stacks above the page, with the links wrapping in a row.
+export function Sidebar({ user, mode, needsAttention }: SidebarProps) {
   const pathname = usePathname();
   const searchRef = useRef<HTMLInputElement>(null);
-  const isApple = useIsApple();
-  // The mobile drawer passes onNavigate; only the always-mounted desktop sidebar owns the shortcut.
-  const inDrawer = onNavigate !== undefined;
 
   useEffect(() => {
-    if (inDrawer) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key.toLowerCase() === "k" && (event.metaKey || event.ctrlKey)) {
         event.preventDefault();
@@ -64,34 +37,23 @@ export function Sidebar({
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [inDrawer]);
+  }, []);
 
   return (
-    <div className="flex h-full flex-col px-3 pb-3 pt-4">
-      <div className="flex h-8 items-center justify-between px-2">
-        <Link
-          href="/dashboard"
-          onClick={onNavigate}
-          aria-label="Revokr overview"
-          className="rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
-        >
-          <Logo />
-        </Link>
-        {simulation && (
-          <span
-            title="Simulation mode: no real credentials are touched."
-            className="rounded-full bg-simulation/15 px-2 py-0.5 text-[11px] font-semibold text-simulation"
-          >
-            Simulation
-          </span>
-        )}
-      </div>
+    <aside className="flex w-full shrink-0 flex-col gap-[18px] border-b border-white/8 bg-sidebar px-3.5 py-[18px] lg:w-[232px] lg:overflow-y-auto lg:border-r lg:border-b-0">
+      <Link href="/dashboard" aria-label="Revokr overview" className="flex w-fit items-center gap-[9px]">
+        <span aria-hidden className="size-[22px] rounded-[7px] bg-[linear-gradient(160deg,#f5f5f7,#86868b)]" />
+        <span className="text-[15px] font-semibold tracking-[-.01em]">Revokr</span>
+      </Link>
 
-      <Form action="/incidents" role="search" onSubmit={onNavigate} className="relative mt-5">
-        <Search
-          aria-hidden
-          className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"
-        />
+      <Form
+        action="/incidents"
+        role="search"
+        className="flex items-center gap-2 rounded-[10px] border border-white/8 bg-white/4 px-2.5 py-2 focus-within:border-white/20"
+      >
+        <span aria-hidden className="font-mono text-[12px] text-muted-foreground">
+          ⌕
+        </span>
         <input
           ref={searchRef}
           name="q"
@@ -99,43 +61,29 @@ export function Sidebar({
           placeholder="Search incidents"
           aria-label="Search incidents"
           autoComplete="off"
-          className="h-8 w-full rounded-[10px] bg-white/[0.08] pl-8 pr-12 text-[13px] shadow-[inset_0_1px_0_rgb(255_255_255/0.08)] outline-none transition-[background-color,box-shadow] duration-200 placeholder:text-muted-foreground focus:bg-white/[0.12] focus:ring-2 focus:ring-ring/60 [&::-webkit-search-cancel-button]:hidden"
+          className="min-w-0 flex-1 bg-transparent text-[12px] text-[#f5f5f7] outline-none placeholder:text-muted-foreground [&::-webkit-search-cancel-button]:hidden"
         />
-        <kbd
-          aria-hidden
-          className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 rounded-[5px] bg-white/[0.08] px-1.5 py-px font-sans text-[11px] text-muted-foreground"
-        >
-          {isApple ? "⌘K" : "Ctrl K"}
-        </kbd>
       </Form>
 
-      <nav aria-label="Main" className="mt-5 flex flex-col gap-0.5">
+      <nav aria-label="Main" className="flex flex-row flex-wrap gap-0.5 lg:flex-col">
         {NAV.map((item) => {
           const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
           return (
             <Link
               key={item.href}
               href={item.href}
-              onClick={onNavigate}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "relative flex h-9 items-center gap-2.5 rounded-[10px] px-2 text-[13px] font-medium transition-colors duration-200",
-                "focus-visible:outline-2 focus-visible:outline-ring",
-                active ? "text-foreground" : "text-foreground/80 hover:bg-white/[0.05] hover:text-foreground",
+                "flex items-center gap-2 rounded-[10px] px-2.5 py-2 text-[13px] transition-colors lg:w-full",
+                active ? "bg-white/8 font-medium text-[#f5f5f7]" : "text-muted-foreground hover:text-[#f5f5f7]",
               )}
             >
-              {active && (
-                <motion.span
-                  layoutId={inDrawer ? "sidebar-active-drawer" : "sidebar-active"}
-                  aria-hidden
-                  className="absolute inset-0 rounded-[10px] bg-white/[0.12] shadow-[inset_0_1px_0_rgb(255_255_255/0.12),0_1px_3px_rgb(0_0_0/0.35)]"
-                  transition={{ type: "spring", stiffness: 520, damping: 42 }}
-                />
-              )}
-              <IconTile icon={item.icon} color={item.color} className="relative" />
-              <span className="relative">{item.label}</span>
+              <span aria-hidden className="font-mono text-[12px] text-muted-foreground">
+                {item.glyph}
+              </span>
+              <span>{item.label}</span>
               {item.href === "/incidents" && needsAttention > 0 && (
-                <span className="relative ml-auto grid h-5 min-w-5 place-items-center rounded-full bg-critical px-1.5 text-[11px] font-semibold tabular-nums text-white">
+                <span className="ml-auto font-mono text-[10px] font-medium text-approval">
                   {needsAttention}
                   <span className="sr-only"> need your attention</span>
                 </span>
@@ -145,46 +93,23 @@ export function Sidebar({
         })}
       </nav>
 
-      <div className="mt-auto flex flex-col gap-2">
-        <div className="surface rounded-xl p-3">
-          <div className="flex items-center gap-2.5">
-            <span
-              aria-hidden
-              className="grid size-8 shrink-0 place-items-center rounded-[9px] bg-linear-to-b from-[#48484a] to-[#2c2c2e] text-sm font-semibold uppercase ring-1 ring-inset ring-white/10"
-            >
-              {organization.charAt(0)}
-            </span>
-            <div className="min-w-0">
-              <p className="truncate text-[13px] font-medium">{organization}</p>
-              <p className="text-xs text-muted-foreground">{repositoryCount} repositories</p>
-            </div>
-          </div>
-          <p className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
-            <span className="size-1.5 rounded-full bg-resolved shadow-[0_0_6px_var(--resolved)]" />
-            IAM sandbox · us-east-1
-          </p>
+      <div className="flex items-center gap-2 border-t border-white/8 pt-3.5 lg:mt-auto">
+        <UserAvatar user={user} />
+        <div className="flex min-w-0 flex-col">
+          <span className="truncate text-[12px] font-medium">{user.name ?? user.login}</span>
+          <span className="truncate font-mono text-[10px] text-muted-foreground">
+            {mode === "demo" ? "Demo session" : mode === "google" ? (user.email ?? user.login) : `@${user.login}`}
+          </span>
         </div>
-
-        <div className="flex items-center gap-2.5 rounded-xl px-1.5 py-1">
-          <UserAvatar user={user} />
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-[13px] font-medium">{user.name ?? user.login}</p>
-            <p className="truncate text-xs text-muted-foreground">
-              {mode === "demo" ? "Demo session" : mode === "google" ? (user.email ?? user.login) : `@${user.login}`}
-            </p>
-          </div>
-          <form action="/api/auth/logout" method="post">
-            <button
-              type="submit"
-              aria-label="Sign out"
-              title="Sign out"
-              className="grid size-8 cursor-pointer place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-white/[0.07] hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
-            >
-              <LogOut aria-hidden className="size-4" />
-            </button>
-          </form>
-        </div>
+        <form action="/api/auth/logout" method="post" className="ml-auto">
+          <button
+            type="submit"
+            className="cursor-pointer rounded-[6px] px-1.5 py-1 font-mono text-[10px] text-muted-foreground transition-colors hover:text-[#f5f5f7]"
+          >
+            Sign out
+          </button>
+        </form>
       </div>
-    </div>
+    </aside>
   );
 }

@@ -1,11 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
-import { Search, SearchX, X } from "lucide-react";
-import { SeverityBars } from "./badges";
+import { Btn, Card, PILL } from "@/components/ds/primitives";
 import { IncidentTable } from "./incident-table";
-import { Button } from "@/components/ui/button";
 import { SEVERITY_META, SEVERITY_ORDER } from "@/lib/incident-meta";
 import {
   applyIncidentQuery,
@@ -65,13 +62,12 @@ export function IncidentsView({ incidents, initialQuery }: IncidentsViewProps) {
   };
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-        {/* An Apple segmented control; the selected pill slides between segments. */}
+    <>
+      <div className="flex flex-wrap items-center gap-2.5">
         <div
           role="group"
           aria-label="Filter by status"
-          className="glass-control flex w-fit max-w-full gap-0.5 overflow-x-auto rounded-full p-1 [scrollbar-width:none]"
+          className="flex max-w-full flex-wrap gap-1.5 rounded-full border border-white/8 bg-white/4 p-1"
         >
           {VIEWS.map((view) => {
             const selected = query.view === view.id;
@@ -82,62 +78,35 @@ export function IncidentsView({ incidents, initialQuery }: IncidentsViewProps) {
                 aria-pressed={selected}
                 onClick={() => update({ view: view.id })}
                 className={cn(
-                  "relative inline-flex h-8 shrink-0 cursor-pointer items-center gap-2 rounded-full px-3.5 text-[13px] font-medium transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-ring",
-                  selected ? "text-foreground" : "text-muted-foreground hover:text-foreground",
+                  "flex cursor-pointer items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[12px] font-medium",
+                  selected ? "bg-white/10 text-[#f5f5f7]" : "text-muted-foreground hover:text-[#f5f5f7]",
                 )}
               >
-                {selected && (
-                  <motion.span
-                    layoutId="incident-view-pill"
-                    aria-hidden
-                    className="absolute inset-0 rounded-full bg-white/[0.16] shadow-[inset_0_1px_0_rgb(255_255_255/0.22),inset_0_-1px_0_rgb(255_255_255/0.05),0_2px_8px_-2px_rgb(0_0_0/0.5)]"
-                    transition={{ type: "spring", stiffness: 520, damping: 40 }}
-                  />
-                )}
-                <span className="relative">{view.label}</span>
-                <span
-                  className={cn(
-                    "relative text-xs tabular-nums transition-colors",
-                    selected ? "text-foreground/70" : "text-muted-foreground/70",
-                  )}
-                >
-                  {counts[view.id]}
-                </span>
+                {view.label}
+                <span className="font-mono text-[11px] font-normal text-muted-foreground">{counts[view.id]}</span>
               </button>
             );
           })}
         </div>
 
-        <div className="relative w-full xl:w-80">
-          <Search
-            aria-hidden
-            className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-          />
+        <label className={cn(PILL, "ml-auto py-1.5 focus-within:border-white/20")}>
+          <span aria-hidden className="font-mono text-[11px] text-muted-foreground">
+            ⌕
+          </span>
           <input
             type="search"
             value={searchInput}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search repo, file or secret type"
             aria-label="Search incidents"
-            className="glass-control h-10 w-full rounded-full pl-9 pr-9 text-sm outline-none transition-[background-color,box-shadow] duration-200 placeholder:text-muted-foreground focus:bg-white/[0.12] focus:ring-2 focus:ring-ring/60 [&::-webkit-search-cancel-button]:hidden"
+            className="w-[210px] bg-transparent text-[12px] text-[#f5f5f7] outline-none placeholder:text-muted-foreground [&::-webkit-search-cancel-button]:hidden"
           />
-          {searchInput && (
-            <button
-              type="button"
-              onClick={() => setSearch("")}
-              aria-label="Clear search"
-              className="absolute right-2.5 top-1/2 grid size-5 -translate-y-1/2 cursor-pointer place-items-center rounded-full bg-white/25 text-black transition-colors hover:bg-white/40"
-            >
-              <X aria-hidden className="size-3" strokeWidth={3} />
-            </button>
-          )}
-        </div>
+        </label>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <span className="mr-1 text-[13px] text-muted-foreground">Severity</span>
+        <span className="mr-1 font-mono text-[11px] text-muted-foreground">severity</span>
         {SEVERITY_ORDER.map((severity) => {
-          const meta = SEVERITY_META[severity];
           const selected = query.severities.includes(severity);
           return (
             <button
@@ -146,25 +115,24 @@ export function IncidentsView({ incidents, initialQuery }: IncidentsViewProps) {
               aria-pressed={selected}
               onClick={() => toggleSeverity(severity)}
               className={cn(
-                "inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-full px-3 text-[13px] font-medium transition-[background-color,color,transform] duration-200 active:scale-95 focus-visible:outline-2 focus-visible:outline-ring",
-                selected
-                  ? cn(meta.text, meta.bg, "ring-1 ring-inset ring-current/30")
-                  : "glass-control text-muted-foreground hover:bg-white/[0.13] hover:text-foreground",
+                "flex cursor-pointer items-center gap-[7px] rounded-full border px-[13px] py-[7px] font-mono text-[10px] font-medium uppercase tracking-[.1em]",
+                selected ? "border-white/30 bg-white/10" : "border-white/8 bg-white/4 hover:border-white/16",
+                SEVERITY_META[severity].text,
               )}
             >
-              <SeverityBars level={meta.level} className={selected ? undefined : meta.text} />
-              {meta.label}
+              <span aria-hidden className="size-1.5 rounded-full bg-current" />
+              {severity}
             </button>
           );
         })}
 
-        <p aria-live="polite" className="ml-auto text-[13px] tabular-nums text-muted-foreground">
+        <span aria-live="polite" className="ml-auto font-mono text-[11px] text-muted-foreground">
           {results.length} of {incidents.length}
-        </p>
+        </span>
         {isFiltered(query) && (
-          <Button variant="ghost" size="sm" onClick={clearFilters} className="text-link hover:text-link">
+          <Btn size="sm" onClick={clearFilters}>
             Clear
-          </Button>
+          </Btn>
         )}
       </div>
 
@@ -176,21 +144,16 @@ export function IncidentsView({ incidents, initialQuery }: IncidentsViewProps) {
           onSort={toggleSort}
         />
       ) : (
-        <div className="surface flex flex-col items-center gap-3 rounded-3xl px-6 py-20 text-center animate-in fade-in zoom-in-95 animation-duration-300">
-          <span className="grid size-12 place-items-center rounded-full bg-white/[0.06]">
-            <SearchX aria-hidden className="size-5 text-muted-foreground" />
-          </span>
-          <div>
-            <p className="text-[17px] font-semibold">No results</p>
-            <p className="mt-1 text-[13px] text-muted-foreground">
-              Try a different status or severity, or clear the search.
-            </p>
-          </div>
-          <Button variant="secondary" size="sm" onClick={clearFilters}>
+        <Card as="section" className="flex max-w-[560px] flex-col items-start gap-3 rounded-[20px] p-8">
+          <h2 className="m-0 text-xl font-medium tracking-[-.02em]">No results</h2>
+          <p className="m-0 text-[13px] leading-[1.6] text-muted-foreground">
+            Nothing matches this status, severity and search. Try a different one, or clear the filters.
+          </p>
+          <Btn size="sm" onClick={clearFilters}>
             Clear filters
-          </Button>
-        </div>
+          </Btn>
+        </Card>
       )}
-    </div>
+    </>
   );
 }
